@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Логистическая Платформа - Казахстан</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px 20px;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 16px 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .navbar-menu a, .navbar-menu button {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .navbar-menu a:hover, .navbar-menu button:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-300);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray-700);
+            font-size: 14px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 15px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid;
+        }
+        
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: var(--success);
+        }
+        
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: var(--danger);
+        }
+        
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: var(--primary);
+        }
+        
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: var(--warning);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Typography */
+        h1, h2, h3 {
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        h1 { font-size: 32px; }
+        h2 { font-size: 24px; }
+        h3 { font-size: 20px; }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        /* Contact Info */
+        .contact-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            margin-top: 20px;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .contact-item strong {
+            min-width: 120px;
+        }
+        
+        /* Cargo Card */
+        .cargo-card {
+            border-left: 4px solid var(--primary);
+            transition: all 0.2s;
+        }
+        
+        .cargo-card:hover {
+            transform: translateX(4px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .cargo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+        
+        .cargo-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--gray-50);
+            border-radius: var(--radius);
+        }
+        
+        .cargo-meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cargo-meta-label {
+            font-size: 12px;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .cargo-meta-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .filters-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .filters-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--gray-700);
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 10px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .filter-actions .btn {
+            white-space: nowrap;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+            z-index: 101;
+        }
+        
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            background: var(--gray-800);
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            max-height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        
+        .mobile-menu.active {
+            display: flex;
+        }
+        
+        .mobile-menu a,
+        .mobile-menu button {
+            color: white;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            transition: background 0.2s;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+        }
+        
+        .mobile-menu a:hover,
+        .mobile-menu button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-content {
+                position: relative;
+            }
+            
+            .navbar-menu {
+                display: none;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cargo-meta {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-actions {
+                width: 100%;
+            }
+            
+            .filter-actions .btn {
+                flex: 1;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .cargo-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .container {
+                padding: 16px 12px;
+            }
+            
+            .card {
+                padding: 16px;
+            }
+            
+            h1 { font-size: 24px; }
+            h2 { font-size: 20px; }
+            h3 { font-size: 18px; }
+            
+            .btn {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .navbar-brand {
+                font-size: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px 8px;
+            }
+            
+            .card {
+                padding: 12px;
+            }
+            
+            .filters {
+                padding: 16px;
+            }
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-500);
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease-in;
+        }
+        
+        .modal-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: var(--gray-200);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--gray-700);
+            font-weight: 300;
+        }
+        
+        .modal-close-btn:hover {
+            background: var(--gray-300);
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body>
+        <nav class="navbar">
+        <div class="navbar-content">
+            <a href="#" class="navbar-brand" onclick="showPage('home'); return false;">
+                🚚 Логистика KZ
+            </a>
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)">☰</button>
+            <div class="navbar-menu" id="navbarMenu">
+                <a href="#" onclick="showPage('login'); return false;">Вход</a>
+                <a href="#" onclick="showPage('register'); return false;">Регистрация</a>
+            </div>
+            <div class="mobile-menu" id="mobileMenu">
+                <a href="#" onclick="showPage('login'); return false;">Вход</a>
+                <a href="#" onclick="showPage('register'); return false;">Регистрация</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="card" style="text-align: center; padding: 60px 20px;">
+                <h1 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px;">
+                    Логистическая Платформа
+                </h1>
+                <p style="font-size: 18px; color: var(--gray-600); margin-bottom: 32px;">
+                    Связываем грузоотправителей и водителей по всему Казахстану
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary" onclick="showPage('register'); return false;">Начать работу</button>
+                    <button type="button" class="btn btn-secondary" onclick="showPage('login'); return false;">Войти</button>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 24px;">
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 12px;">📦 Для грузоотправителей</h3>
+                    <p style="color: var(--gray-600);">Создавайте заявки на перевозку грузов, находите надежных водителей</p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--success); margin-bottom: 12px;">🚛 Для водителей</h3>
+                    <p style="color: var(--gray-600);">Находите заказы, подтверждайте свой профиль, зарабатывайте больше</p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--warning); margin-bottom: 12px;">🔒 Безопасность</h3>
+                    <p style="color: var(--gray-600);">Все водители проходят верификацию администратором</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Page -->
+        <div id="login" class="page">
+            <div class="card" style="max-width: 500px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Вход в систему</h2>
+                </div>
+                <div id="loginError" class="alert alert-error hidden"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required placeholder="example@mail.kz">
+                    </div>
+                    <div class="form-group">
+                        <label>Пароль</label>
+                        <input type="password" id="loginPassword" required placeholder="Введите пароль">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
+                        Войти
+                    </button>
+                </form>
+                <p style="margin-top: 20px; text-align: center; color: var(--gray-600);">
+                    Нет аккаунта? <a href="#" onclick="showPage('register'); return false;" style="color: var(--primary); font-weight: 500;">Зарегистрироваться</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Register Page -->
+        <div id="register" class="page">
+            <div class="card" style="max-width: 600px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Регистрация</h2>
+                </div>
+                <div id="registerError" class="alert alert-error hidden"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Роль</label>
+                        <select id="registerRole" required>
+                            <option value="shipper">Грузоотправитель</option>
+                            <option value="driver">Водитель</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="registerEmail" required placeholder="example@mail.kz">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Пароль</label>
+                            <input type="password" id="registerPassword" required minlength="6" placeholder="Минимум 6 символов">
+                        </div>
+                        <div class="form-group">
+                            <label>Подтвердите пароль</label>
+                            <input type="password" id="registerPasswordConfirm" required placeholder="Повторите пароль">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="registerBtn">
+                        Зарегистрироваться
+                    </button>
+                </form>
+                <p style="margin-top: 20px; text-align: center; color: var(--gray-600);">
+                    Уже есть аккаунт? <a href="#" onclick="showPage('login'); return false;" style="color: var(--primary); font-weight: 500;">Войти</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Дашборд</h2>
+                </div>
+                <p style="margin-bottom: 20px; color: var(--gray-600);">
+                    Добро пожаловать, <strong id="userEmail"></strong>!
+                </p>
+                <p style="margin-bottom: 24px;">
+                    <span class="badge badge-info" id="userRole"></span>
+                </p>
+                <div id="paymentWarning" class="alert alert-warning hidden">
+                    <div>
+                        <strong>Требуется активация аккаунта</strong>
+                        <p style="margin-top: 8px; margin-bottom: 0;">Для доступа к функциям платформы необходимо активировать аккаунт.</p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('payment')">Активировать</button>
+                </div>
+                <div id="dashboardContent"></div>
+            </div>
+        </div>
+
+        <!-- Payment Page -->
+        <div id="payment" class="page">
+            <div class="card" style="max-width: 600px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Активация аккаунта</h2>
+                </div>
+                <div class="alert alert-info">
+                    <div>
+                        <strong>Информация</strong>
+                        <p style="margin-top: 8px; margin-bottom: 0;">Для доступа к функциям платформы необходимо активировать аккаунт. В тестовом режиме активация происходит без оплаты.</p>
+                    </div>
+                </div>
+                <button class="btn btn-primary" style="width: 100%; margin-top: 20px;" onclick="handleActivate()" id="activateBtn">
+                    Активировать аккаунт
+                </button>
+            </div>
+        </div>
+
+        <!-- Cargo Form Page -->
+        <div id="cargoForm" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Создать груз</h2>
+                </div>
+                <div id="cargoError" class="alert alert-error hidden"></div>
+                <form onsubmit="handleCreateCargo(event)">
+                    <div class="form-group">
+                        <label>Название груза *</label>
+                        <input type="text" id="cargoTitle" required placeholder="Например: Доставка контейнера">
+                    </div>
+                    <div class="form-group">
+                        <label>Описание</label>
+                        <textarea id="cargoDescription" placeholder="Подробное описание груза"></textarea>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Тип груза *</label>
+                            <select id="cargoType" required>
+                                <option value="container">Контейнер</option>
+                                <option value="pallets">Паллеты</option>
+                                <option value="bulk">Насыпной</option>
+                                <option value="liquid">Жидкость</option>
+                                <option value="fragile">Хрупкий</option>
+                                <option value="perishable">Скоропортящийся</option>
+                                <option value="general">Обычный</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Тип машины *</label>
+                            <select id="cargoVehicleType" required>
+                                <option value="closed">Закрытый тент</option>
+                                <option value="open">Открытый тип погрузки</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Вес (кг) *</label>
+                            <input type="number" id="cargoWeightKg" required step="0.01" placeholder="15000" oninput="updateWeightTons(); calculatePricePerKm();">
+                        </div>
+                        <div class="form-group">
+                            <label>Вес (тонны)</label>
+                            <input type="number" id="cargoWeightTons" step="0.001" placeholder="15" oninput="updateWeightKg();">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Объем (м³)</label>
+                        <input type="number" id="cargoVolume" step="0.01" placeholder="33.2">
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Общая стоимость (₸) *</label>
+                            <input type="number" id="cargoTotalPrice" required step="0.01" placeholder="450000" oninput="calculatePricePerKm();">
+                        </div>
+                        <div class="form-group">
+                            <label>Расстояние (км) *</label>
+                            <input type="number" id="cargoDistance" required step="0.01" placeholder="3000" oninput="calculatePricePerKm();">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Стоимость за 1 км (₸)</label>
+                        <input type="number" id="cargoPricePerKm" step="0.01" placeholder="Автоматический расчет" readonly style="background: var(--gray-100);">
+                        <small style="color: var(--gray-500); font-size: 13px; margin-top: 4px; display: block;">Рассчитывается автоматически на основе общей стоимости и расстояния</small>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Город отправления *</label>
+                            <input type="text" id="cargoPickupCity" required placeholder="Алматы">
+                        </div>
+                        <div class="form-group">
+                            <label>Адрес отправления</label>
+                            <input type="text" id="cargoPickupAddress" placeholder="ул. Абая, 150">
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Город доставки *</label>
+                            <input type="text" id="cargoDeliveryCity" required placeholder="Астана">
+                        </div>
+                        <div class="form-group">
+                            <label>Адрес доставки</label>
+                            <input type="text" id="cargoDeliveryAddress" placeholder="ул. Кабанбай батыра, 50">
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Дата загрузки *</label>
+                            <input type="date" id="cargoPickupDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Дата доставки</label>
+                            <input type="date" id="cargoDeliveryDate">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Комментарий к заказу</label>
+                        <textarea id="cargoComment" rows="4" placeholder="Дополнительная информация о грузе, требования к перевозке и т.д."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="createCargoBtn">
+                        Создать груз
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cargo List Page -->
+        <div id="cargoList" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Мои грузы</h2>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('cargoForm')">+ Создать груз</button>
+                </div>
+                <div class="filters">
+                    <div class="filters-header">
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearCargoFilters()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label>Статус</label>
+                            <select id="cargoStatusFilter" onchange="filterCargos()">
+                                <option value="">Все статусы</option>
+                                <option value="pending">Ожидает</option>
+                                <option value="assigned">Назначен</option>
+                                <option value="in_transit">В пути</option>
+                                <option value="delivered">Доставлен</option>
+                                <option value="cancelled">Отменен</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Тип груза</label>
+                            <select id="cargoTypeFilter" onchange="filterCargos()">
+                                <option value="">Все типы</option>
+                                <option value="container">Контейнер</option>
+                                <option value="pallets">Паллеты</option>
+                                <option value="bulk">Насыпной</option>
+                                <option value="liquid">Жидкость</option>
+                                <option value="fragile">Хрупкий</option>
+                                <option value="perishable">Скоропортящийся</option>
+                                <option value="general">Обычный</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Город отправления</label>
+                            <input type="text" id="cargoPickupCityFilter" placeholder="Любой город" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Город доставки</label>
+                            <input type="text" id="cargoDeliveryCityFilter" placeholder="Любой город" oninput="filterCargos()">
+                        </div>
+                    </div>
+                </div>
+                <div id="cargoListContent"></div>
+            </div>
+        </div>
+
+        <!-- Available Cargos Page (for drivers) -->
+        <div id="availableCargos" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Доступные грузы</h2>
+                </div>
+                <div class="filters">
+                    <div class="filters-header">
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearAvailableFilters()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label>Город отправления</label>
+                            <input type="text" id="availablePickupCityFilter" placeholder="Например: Алматы" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Город доставки</label>
+                            <input type="text" id="availableDeliveryCityFilter" placeholder="Например: Астана" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Тип груза</label>
+                            <select id="availableCargoTypeFilter" onchange="filterAvailableCargos()">
+                                <option value="">Все типы</option>
+                                <option value="container">Контейнер</option>
+                                <option value="pallets">Паллеты</option>
+                                <option value="bulk">Насыпной</option>
+                                <option value="liquid">Жидкость</option>
+                                <option value="fragile">Хрупкий</option>
+                                <option value="perishable">Скоропортящийся</option>
+                                <option value="general">Обычный</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Тип машины</label>
+                            <select id="availableVehicleTypeFilter" onchange="filterAvailableCargos()">
+                                <option value="">Любой тип</option>
+                                <option value="open">Открытый</option>
+                                <option value="closed">Закрытый тент</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Мин. стоимость (₸)</label>
+                            <input type="number" id="availableMinPriceFilter" placeholder="0" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Макс. стоимость (₸)</label>
+                            <input type="number" id="availableMaxPriceFilter" placeholder="Без ограничений" oninput="filterAvailableCargos()">
+                        </div>
+                    </div>
+                </div>
+                <div id="availableCargosContent"></div>
+            </div>
+        </div>
+
+        <!-- My Orders Page (for drivers) -->
+        <div id="myOrders" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Мои заказы</h2>
+                </div>
+                <div class="filters">
+                    <div class="filters-header">
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearMyOrdersFilters()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label>Статус</label>
+                            <select id="myOrdersStatusFilter" onchange="filterMyOrders()">
+                                <option value="">Все статусы</option>
+                                <option value="assigned">Назначен</option>
+                                <option value="in_transit">В пути</option>
+                                <option value="delivered">Доставлен</option>
+                                <option value="cancelled">Отменен</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>Город отправления</label>
+                            <input type="text" id="myOrdersPickupCityFilter" placeholder="Любой город" oninput="filterMyOrders()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Город доставки</label>
+                            <input type="text" id="myOrdersDeliveryCityFilter" placeholder="Любой город" oninput="filterMyOrders()">
+                        </div>
+                    </div>
+                </div>
+                <div id="myOrdersContent"></div>
+            </div>
+        </div>
+
+        <!-- Driver Profile Page -->
+        <div id="driverProfile" class="page">
+            <div class="card" style="max-width: 700px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Профиль водителя</h2>
+                </div>
+                <div id="driverError" class="alert alert-error hidden"></div>
+                <div id="driverSuccess" class="alert alert-success hidden"></div>
+                <form onsubmit="handleSaveDriverProfile(event)">
+                    <div class="form-group">
+                        <label>Номер водительского удостоверения *</label>
+                        <input type="text" id="driverLicense" required placeholder="AB1234567">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата окончания действия удостоверения *</label>
+                        <input type="date" id="driverLicenseExpiry" required>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Тип транспорта *</label>
+                            <select id="driverVehicleType" required>
+                                <option value="truck">Грузовик</option>
+                                <option value="van">Фургон</option>
+                                <option value="trailer">Прицеп</option>
+                                <option value="container">Контейнер</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Номер транспорта *</label>
+                            <input type="text" id="driverVehicleNumber" required placeholder="01KZ123AB">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="saveDriverBtn">
+                        Сохранить профиль
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Admin Panel Page -->
+        <div id="adminPanel" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Админ-панель</h2>
+                </div>
+                <div id="adminContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Определяем функции сразу, чтобы они были доступны для onclick
+        // Эти функции будут переопределены в app.js, но должны быть доступны сразу
+        window.showPage = function(pageId) {
+            // Закрываем мобильное меню если открыто
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (mobileMenu) {
+                mobileMenu.classList.remove('active');
+            }
+            
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+        };
+        
+        window.toggleMobileMenu = function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (mobileMenu) {
+                const isActive = mobileMenu.classList.contains('active');
+                if (isActive) {
+                    mobileMenu.classList.remove('active');
+                } else {
+                    mobileMenu.classList.add('active');
+                }
+            }
+        };
+        
+        // Закрытие меню при клике вне его
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.addEventListener('click', function(event) {
+                    const mobileMenu = document.getElementById('mobileMenu');
+                    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+                    
+                    if (mobileMenu && mobileMenu.classList.contains('active')) {
+                        // Если клик не внутри меню и не на кнопке меню
+                        const clickedInsideMenu = mobileMenu.contains(event.target);
+                        const clickedOnButton = mobileMenuBtn && (mobileMenuBtn.contains(event.target) || mobileMenuBtn === event.target);
+                        
+                        if (!clickedInsideMenu && !clickedOnButton) {
+                            mobileMenu.classList.remove('active');
+                        }
+                    }
+                }, true); // Используем capture phase для более раннего перехвата
+            }, 100);
+        });
+    </script>
+    <script src="/app.js"></script>
+</body>
+</html>
