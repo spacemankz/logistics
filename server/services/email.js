@@ -50,7 +50,7 @@ const createTransporter = async () => {
 // Получение транспортера (создается при первом использовании)
 const getTransporter = async () => {
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    return nodemailer.createTransport({
+    const transportConfig = {
       host: process.env.SMTP_HOST,
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true',
@@ -58,7 +58,18 @@ const getTransporter = async () => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
       }
-    });
+    };
+    
+    // Дополнительные настройки для Zoho Mail
+    if (process.env.SMTP_HOST.includes('zoho')) {
+      transportConfig.requireTLS = true;
+      transportConfig.tls = {
+        rejectUnauthorized: false,
+        ciphers: 'SSLv3'
+      };
+    }
+    
+    return nodemailer.createTransport(transportConfig);
   }
   return await createTransporter();
 };
@@ -159,6 +170,9 @@ SHIPLY.KZ - Подтверждение email
   } catch (error) {
     console.error('❌ Ошибка отправки email:', error.message);
     console.error('Детали ошибки:', error);
+    console.error('Код ошибки:', error.code);
+    console.error('Команда SMTP:', error.command);
+    console.error('Ответ SMTP:', error.response);
     
     // В режиме разработки, если не удалось отправить, выводим код в консоль
     if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
@@ -172,7 +186,15 @@ SHIPLY.KZ - Подтверждение email
       return { messageId: 'dev-mode-error', accepted: [email] };
     }
     
-    throw new Error(`Не удалось отправить код подтверждения: ${error.message}`);
+    // Формируем более информативное сообщение об ошибке
+    let errorMessage = 'Не удалось отправить код подтверждения';
+    if (error.response) {
+      errorMessage += `: ${error.response}`;
+    } else if (error.message) {
+      errorMessage += `: ${error.message}`;
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 

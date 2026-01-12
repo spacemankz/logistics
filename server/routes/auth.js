@@ -76,10 +76,12 @@ router.post('/send-otp', [
       });
     } catch (emailError) {
       console.error('Ошибка отправки email:', emailError);
+      console.error('Stack trace:', emailError.stack);
       // Удаляем OTP если не удалось отправить email
       await OTP.destroy({ where: { email: normalizedEmail, code } });
       return res.status(500).json({ 
-        message: 'Не удалось отправить код подтверждения. Проверьте настройки SMTP сервера.' 
+        message: emailError.message || 'Не удалось отправить код подтверждения. Проверьте настройки SMTP сервера.',
+        error: process.env.NODE_ENV === 'development' ? emailError.message : undefined
       });
     }
   } catch (error) {
