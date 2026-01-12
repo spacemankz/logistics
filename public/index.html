@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Логистическая Платформа - Казахстан</title>
+    <title>SHIPLY.KZ - Логистическая Платформа Казахстана</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         :root {
             --primary: #2563eb;
@@ -81,7 +83,30 @@
             text-decoration: none;
             display: flex;
             align-items: center;
+            gap: 12px;
+            flex-direction: column;
+        }
+        
+        .navbar-brand-logo {
+            display: flex;
+            align-items: center;
             gap: 8px;
+        }
+        
+        .navbar-brand-description {
+            font-size: 11px;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+        
+        .logo-img {
+            height: 48px;
+            width: auto;
+            background: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .navbar-menu {
@@ -344,6 +369,11 @@
         .badge-danger {
             background: #fee2e2;
             color: #991b1b;
+        }
+        
+        .badge-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
         }
         
         /* Contact Info */
@@ -610,7 +640,17 @@
             }
             
             .navbar-brand {
-                font-size: 20px;
+                font-size: 18px;
+                gap: 8px;
+            }
+            
+            .navbar-brand-description {
+                font-size: 10px;
+            }
+            
+            .logo-img {
+                height: 40px;
+                padding: 6px 12px;
             }
         }
         
@@ -639,6 +679,273 @@
             font-size: 64px;
             margin-bottom: 16px;
             opacity: 0.5;
+        }
+        
+        /* Footer */
+        .footer {
+            background: var(--gray-800);
+            color: var(--gray-300);
+            margin-top: 60px;
+            padding: 40px 20px 20px;
+            border-top: 1px solid var(--gray-700);
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .footer-section h3 {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .footer-section p {
+            color: var(--gray-400);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer-links a {
+            color: var(--gray-400);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+        
+        .footer-links li i {
+            width: 18px;
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+        
+        .footer-section h3 i {
+            margin-right: 8px;
+            color: var(--primary);
+            font-size: 18px;
+        }
+        
+        .footer-disclaimer {
+            background: var(--gray-900);
+            padding: 32px 20px;
+            border-top: 1px solid var(--gray-700);
+            border-bottom: 1px solid var(--gray-700);
+        }
+        
+        .footer-disclaimer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-disclaimer h4 {
+            color: var(--warning);
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .footer-disclaimer p {
+            color: var(--gray-400);
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        
+        .footer-disclaimer ul {
+            color: var(--gray-400);
+            font-size: 13px;
+            line-height: 1.8;
+            margin: 12px 0 16px 20px;
+            padding: 0;
+        }
+        
+        .footer-disclaimer ul li {
+            margin-bottom: 8px;
+        }
+        
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 24px;
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 14px;
+        }
+        
+        .footer-social {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .footer-social a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gray-700);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        
+        .footer-social a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+        }
+        
+        .footer-social a[href*="telegram"]:hover {
+            background: #0088cc;
+        }
+        
+        .footer-social a[href*="whatsapp"]:hover {
+            background: #25D366;
+        }
+        
+        .footer-social a[href*="mailto"]:hover {
+            background: #EA4335;
+        }
+        
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .footer-section {
+                text-align: left;
+            }
+            
+            .footer-section h3 {
+                text-align: left;
+            }
+            
+            .footer-social {
+                justify-content: flex-start;
+            }
+            
+            .footer-disclaimer {
+                padding: 24px 16px;
+            }
+            
+            .footer-disclaimer ul {
+                margin-left: 16px;
+            }
+            
+            .sitemap-section {
+                padding: 16px;
+            }
+            
+            .sitemap-section h3 {
+                font-size: 18px;
+            }
+        }
+        
+        /* Sitemap Styles */
+        .sitemap-section {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .sitemap-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sitemap-links li {
+            margin-bottom: 10px;
+        }
+        
+        .sitemap-links a {
+            color: var(--gray-700);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+        
+        .sitemap-links a:hover {
+            background: var(--gray-100);
+            color: var(--primary);
+            transform: translateX(4px);
+        }
+        
+        .sitemap-links a i {
+            width: 18px;
+            text-align: center;
+            color: var(--primary);
+        }
+        
+        /* Register Steps */
+        .register-step-content {
+            transition: opacity 0.3s;
+        }
+        
+        .register-step-content.hidden {
+            display: none;
+        }
+        
+        .register-step {
+            transition: all 0.3s;
+        }
+        
+        #passwordRequirements div {
+            margin: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #passwordRequirements div i {
+            width: 16px;
+        }
+        
+        #passwordRequirements div.valid {
+            color: var(--success);
+        }
+        
+        #passwordRequirements div.invalid {
+            color: var(--gray-500);
         }
         
         /* Modal */
@@ -686,9 +993,14 @@
         <nav class="navbar">
         <div class="navbar-content">
             <a href="#" class="navbar-brand" onclick="showPage('home'); return false;">
-                🚚 Логистика KZ
+                <div class="navbar-brand-logo">
+                    <img src="/images/shiplylogo.png" alt="SHIPLY.KZ" class="logo-img">
+                </div>
+                
             </a>
-            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)">☰</button>
+            <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu(event)">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="navbar-menu" id="navbarMenu">
                 <a href="#" onclick="showPage('login'); return false;">Вход</a>
                 <a href="#" onclick="showPage('register'); return false;">Регистрация</a>
@@ -705,7 +1017,7 @@
         <div id="home" class="page active">
             <div class="card" style="text-align: center; padding: 60px 20px;">
                 <h1 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px;">
-                    Логистическая Платформа
+                    SHIPLY.KZ
                 </h1>
                 <p style="font-size: 18px; color: var(--gray-600); margin-bottom: 32px;">
                     Связываем грузоотправителей и водителей по всему Казахстану
@@ -718,15 +1030,15 @@
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 24px;">
                 <div class="card">
-                    <h3 style="color: var(--primary); margin-bottom: 12px;">📦 Для грузоотправителей</h3>
+                    <h3 style="color: var(--primary); margin-bottom: 12px;"><i class="fas fa-box"></i> Для грузоотправителей</h3>
                     <p style="color: var(--gray-600);">Создавайте заявки на перевозку грузов, находите надежных водителей</p>
                 </div>
                 <div class="card">
-                    <h3 style="color: var(--success); margin-bottom: 12px;">🚛 Для водителей</h3>
+                    <h3 style="color: var(--success); margin-bottom: 12px;"><i class="fas fa-truck"></i> Для водителей</h3>
                     <p style="color: var(--gray-600);">Находите заказы, подтверждайте свой профиль, зарабатывайте больше</p>
                 </div>
                 <div class="card">
-                    <h3 style="color: var(--warning); margin-bottom: 12px;">🔒 Безопасность</h3>
+                    <h3 style="color: var(--warning); margin-bottom: 12px;"><i class="fas fa-shield-alt"></i> Безопасность</h3>
                     <p style="color: var(--gray-600);">Все водители проходят верификацию администратором</p>
                 </div>
             </div>
@@ -763,34 +1075,91 @@
             <div class="card" style="max-width: 600px; margin: 40px auto;">
                 <div class="card-header">
                     <h2>Регистрация</h2>
+                    <div style="margin-top: 12px; display: flex; gap: 8px; justify-content: center;">
+                        <span class="register-step" id="registerStep1" style="background: var(--primary); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">1. Email</span>
+                        <span class="register-step" id="registerStep2" style="background: var(--gray-300); color: var(--gray-600); padding: 4px 12px; border-radius: 12px; font-size: 12px;">2. Код</span>
+                        <span class="register-step" id="registerStep3" style="background: var(--gray-300); color: var(--gray-600); padding: 4px 12px; border-radius: 12px; font-size: 12px;">3. Пароль</span>
+                    </div>
                 </div>
                 <div id="registerError" class="alert alert-error hidden"></div>
-                <form onsubmit="handleRegister(event)">
-                    <div class="form-group">
-                        <label>Роль</label>
-                        <select id="registerRole" required>
-                            <option value="shipper">Грузоотправитель</option>
-                            <option value="driver">Водитель</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="registerEmail" required placeholder="example@mail.kz">
-                    </div>
-                    <div class="form-grid">
+                <div id="registerSuccess" class="alert alert-success hidden"></div>
+                
+                <!-- Шаг 1: Email -->
+                <div id="registerStep1Content" class="register-step-content">
+                    <form onsubmit="handleSendOTP(event)">
+                        <div class="form-group">
+                            <label>Роль</label>
+                            <select id="registerRole" required>
+                                <option value="shipper">Грузоотправитель</option>
+                                <option value="driver">Водитель</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="registerEmail" required placeholder="example@mail.kz">
+                            <small style="color: var(--gray-600); margin-top: 4px; display: block;">
+                                На этот email будет отправлен код подтверждения
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="sendOTPBtn">
+                            Отправить код
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Шаг 2: OTP -->
+                <div id="registerStep2Content" class="register-step-content hidden">
+                    <form onsubmit="handleVerifyOTP(event)">
+                        <div class="form-group">
+                            <label>Код подтверждения</label>
+                            <input type="text" id="registerOTP" required maxlength="6" placeholder="Введите 6-значный код" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+                            <small style="color: var(--gray-600); margin-top: 4px; display: block;">
+                                Код отправлен на <strong id="registerEmailDisplay"></strong>
+                            </small>
+                            <small style="color: var(--primary); margin-top: 8px; display: block; cursor: pointer;" onclick="handleResendOTP()" id="resendOTPLink">
+                                <i class="fas fa-redo"></i> Отправить код повторно
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="verifyOTPBtn">
+                            Подтвердить
+                        </button>
+                        <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="goToRegisterStep(1)">
+                            Назад
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Шаг 3: Пароль -->
+                <div id="registerStep3Content" class="register-step-content hidden">
+                    <form onsubmit="handleRegister(event)">
                         <div class="form-group">
                             <label>Пароль</label>
-                            <input type="password" id="registerPassword" required minlength="6" placeholder="Минимум 6 символов">
+                            <input type="password" id="registerPassword" required placeholder="Введите надежный пароль">
+                            <div id="passwordRequirements" style="margin-top: 8px; padding: 12px; background: var(--gray-50); border-radius: var(--radius); font-size: 13px;">
+                                <strong style="display: block; margin-bottom: 6px;">Требования к паролю:</strong>
+                                <div id="passwordReqMin" style="color: var(--gray-500);"><i class="fas fa-times"></i> Минимум 8 символов</div>
+                                <div id="passwordReqUpper" style="color: var(--gray-500);"><i class="fas fa-times"></i> Заглавная буква</div>
+                                <div id="passwordReqLower" style="color: var(--gray-500);"><i class="fas fa-times"></i> Строчная буква</div>
+                                <div id="passwordReqNumber" style="color: var(--gray-500);"><i class="fas fa-times"></i> Цифра</div>
+                                <div id="passwordReqSpecial" style="color: var(--gray-500);"><i class="fas fa-times"></i> Специальный символ (!@#$%^&*)</div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Подтвердите пароль</label>
                             <input type="password" id="registerPasswordConfirm" required placeholder="Повторите пароль">
+                            <div id="passwordMatch" style="margin-top: 4px; font-size: 13px; display: none;">
+                                <span id="passwordMatchText"></span>
+                            </div>
                         </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="registerBtn">
-                        Зарегистрироваться
-                    </button>
-                </form>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="registerBtn">
+                            Зарегистрироваться
+                        </button>
+                        <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="goToRegisterStep(2)">
+                            Назад
+                        </button>
+                    </form>
+                </div>
+
                 <p style="margin-top: 20px; text-align: center; color: var(--gray-600);">
                     Уже есть аккаунт? <a href="#" onclick="showPage('login'); return false;" style="color: var(--primary); font-weight: 500;">Войти</a>
                 </p>
@@ -1141,7 +1510,163 @@
                 <div id="adminContent"></div>
             </div>
         </div>
+
+        <!-- Sitemap Page -->
+        <div id="sitemap" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-sitemap"></i> Карта сайта</h2>
+                </div>
+                <div style="padding: 24px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+                        <!-- Основные страницы -->
+                        <div class="sitemap-section">
+                            <h3 style="color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-home"></i> Основные страницы
+                            </h3>
+                            <ul class="sitemap-links">
+                                <li><a href="#" onclick="showPage('home'); return false;"><i class="fas fa-home"></i> Главная страница</a></li>
+                                <li><a href="#" onclick="showPage('login'); return false;"><i class="fas fa-sign-in-alt"></i> Вход в систему</a></li>
+                                <li><a href="#" onclick="showPage('register'); return false;"><i class="fas fa-user-plus"></i> Регистрация</a></li>
+                                <li><a href="#" onclick="showPage('dashboard'); return false;"><i class="fas fa-tachometer-alt"></i> Дашборд</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Для грузоотправителей -->
+                        <div class="sitemap-section">
+                            <h3 style="color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-box"></i> Для грузоотправителей
+                            </h3>
+                            <ul class="sitemap-links">
+                                <li><a href="#" onclick="showPage('cargoForm'); return false;"><i class="fas fa-plus-circle"></i> Создать груз</a></li>
+                                <li><a href="#" onclick="showPage('cargoList'); return false;"><i class="fas fa-list"></i> Мои грузы</a></li>
+                                <li><a href="#" onclick="showPage('payment'); return false;"><i class="fas fa-credit-card"></i> Активация аккаунта</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Для водителей -->
+                        <div class="sitemap-section">
+                            <h3 style="color: var(--success); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-truck"></i> Для водителей
+                            </h3>
+                            <ul class="sitemap-links">
+                                <li><a href="#" onclick="showPage('driverProfile'); return false;"><i class="fas fa-user-circle"></i> Профиль водителя</a></li>
+                                <li><a href="#" onclick="showPage('availableCargos'); return false;"><i class="fas fa-search"></i> Доступные грузы</a></li>
+                                <li><a href="#" onclick="showPage('myOrders'); return false;"><i class="fas fa-clipboard-list"></i> Мои заказы</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Административные -->
+                        <div class="sitemap-section">
+                            <h3 style="color: var(--warning); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-cog"></i> Административные
+                            </h3>
+                            <ul class="sitemap-links">
+                                <li><a href="#" onclick="showPage('adminPanel'); return false;"><i class="fas fa-shield-alt"></i> Админ-панель</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Информационные разделы -->
+                    <div style="margin-top: 32px; padding-top: 32px; border-top: 2px solid var(--gray-200);">
+                        <h3 style="color: var(--gray-700); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-info-circle"></i> Информация
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                            <div>
+                                <h4 style="color: var(--gray-600); margin-bottom: 12px; font-size: 16px;">О платформе</h4>
+                                <ul class="sitemap-links">
+                                    <li><a href="#" onclick="alert('Информация скоро появится'); return false;"><i class="fas fa-question-circle"></i> Как это работает</a></li>
+                                    <li><a href="#" onclick="alert('Информация скоро появится'); return false;"><i class="fas fa-file-contract"></i> Условия использования</a></li>
+                                    <li><a href="#" onclick="alert('Информация скоро появится'); return false;"><i class="fas fa-shield-alt"></i> Безопасность</a></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="color: var(--gray-600); margin-bottom: 12px; font-size: 16px;">Контакты</h4>
+                                <ul class="sitemap-links">
+                                    <li><i class="fas fa-envelope"></i> <a href="mailto:support@shiply.kz">support@shiply.kz</a></li>
+                                    <li><i class="fas fa-phone"></i> <a href="tel:+77025491868">+7 (702) 549-18-68</a></li>
+                                    <li><i class="fab fa-telegram"></i> <a href="https://t.me/shiply_kz" target="_blank">Telegram</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3><i class="fas fa-truck"></i> SHIPLY.KZ</h3>
+                <p>Связываем грузоотправителей и водителей по всему Казахстану. Быстро, надежно, безопасно.</p>
+                <div class="footer-social">
+                    <a href="https://t.me/shiply_kz" target="_blank" title="Telegram" aria-label="Telegram">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                    <a href="https://wa.me/77025491868" target="_blank" title="WhatsApp" aria-label="WhatsApp">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a href="mailto:support@shiply.kz" title="Email" aria-label="Email">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3><i class="fas fa-link"></i> Полезные ссылки</h3>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="showPage('home'); return false;"><i class="fas fa-home"></i> Главная</a></li>
+                    <li><a href="#" onclick="showPage('login'); return false;"><i class="fas fa-sign-in-alt"></i> Вход</a></li>
+                    <li><a href="#" onclick="showPage('register'); return false;"><i class="fas fa-user-plus"></i> Регистрация</a></li>
+                    <li><a href="#" onclick="showPage('sitemap'); return false;"><i class="fas fa-sitemap"></i> Карта сайта</a></li>
+                    <li><a href="#" onclick="alert('Информация скоро появится'); return false;"><i class="fas fa-question-circle"></i> Как это работает</a></li>
+                    <li><a href="#" onclick="alert('Информация скоро появится'); return false;"><i class="fas fa-file-contract"></i> Условия использования</a></li>
+                </ul>
+            </div>
+            
+            
+            <div class="footer-section">
+                <h3><i class="fas fa-address-card"></i> Контакты</h3>
+                <ul class="footer-links">
+                    <li><i class="fas fa-envelope"></i> <a href="mailto:support@shiply.kz">support@shiply.kz</a></li>
+                    <li><i class="fas fa-phone"></i> <a href="tel:+77025491868">+7 (702) 549-18-68</a></li>
+                    <li><i class="fas fa-map-marker-alt"></i> Казахстан, Алматы</li>
+                    <li><i class="fas fa-clock"></i> Время работы: 24/7</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3><i class="fas fa-users"></i> Для пользователей</h3>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="alert('Функция скоро будет доступна'); return false;"><i class="fas fa-box"></i> Для грузоотправителей</a></li>
+                    <li><a href="#" onclick="alert('Функция скоро будет доступна'); return false;"><i class="fas fa-car"></i> Для водителей</a></li>
+                    <li><a href="#" onclick="alert('Функция скоро будет доступна'); return false;"><i class="fas fa-shield-alt"></i> Безопасность</a></li>
+                    <li><a href="#" onclick="alert('Функция скоро будет доступна'); return false;"><i class="fas fa-chart-bar"></i> Статистика</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-disclaimer">
+            <div class="footer-disclaimer-content">
+                <h4><i class="fas fa-exclamation-triangle"></i> Отказ от ответственности</h4>
+                <p>Данная платформа предоставляет услуги по сведению грузоотправителей и перевозчиков. Платформа не несет ответственности за:</p>
+                <ul>
+                    <li>Сохранность груза во время транспортировки</li>
+                    <li>Соблюдение условий договора между сторонами</li>
+                    <li>Качество услуг перевозчика</li>
+                    <li>Финансовые отношения между грузоотправителем и перевозчиком</li>
+                </ul>
+                <p>Все соглашения и договоренности заключаются непосредственно между грузоотправителем и перевозчиком. Платформа выступает только в качестве информационного посредника.</p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2026 SHIPLY.KZ. Все права защищены.</p>
+        </div>
+    </footer>
 
     <script>
         // Определяем функции сразу, чтобы они были доступны для onclick

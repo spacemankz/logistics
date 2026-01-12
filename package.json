@@ -10,17 +10,24 @@
     "create-mocks": "node server/scripts/createMocks.js",
     "test-setup": "node test-setup.js"
   },
-  "keywords": ["logistics", "transport", "cargo"],
+  "keywords": [
+    "logistics",
+    "transport",
+    "cargo"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "firebase-admin": "^12.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.12",
     "sequelize": "^6.32.1",
     "sqlite3": "^5.1.6",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1",
-    "express-validator": "^7.0.1"
+    "validator": "^13.15.26"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

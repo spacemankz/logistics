@@ -5,6 +5,10 @@ let allCargos = [];
 let allAvailableCargos = [];
 let allMyOrders = [];
 
+// Состояние регистрации
+let registerEmail = '';
+let registerRole = 'shipper';
+
 // API базовый URL
 const API_URL = '/api';
 
@@ -65,6 +69,56 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         showPage('home');
     }
+    
+    // Инициализация валидации пароля
+    const passwordInput = document.getElementById('registerPassword');
+    const passwordConfirmInput = document.getElementById('registerPasswordConfirm');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', validatePasswordInput);
+    }
+    if (passwordConfirmInput) {
+        passwordConfirmInput.addEventListener('input', validatePasswordInput);
+    }
+    
+    // Ограничение OTP поля только цифрами
+    const otpInput = document.getElementById('registerOTP');
+    if (otpInput) {
+        otpInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+            if (e.target.value.length > 6) {
+                e.target.value = e.target.value.slice(0, 6);
+            }
+        });
+    }
+    
+    // Сброс формы регистрации при открытии страницы
+    const registerPage = document.getElementById('register');
+    if (registerPage) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    if (registerPage.classList.contains('active')) {
+                        goToRegisterStep(1);
+                        const errorDiv = document.getElementById('registerError');
+                        const successDiv = document.getElementById('registerSuccess');
+                        if (errorDiv) errorDiv.classList.add('hidden');
+                        if (successDiv) successDiv.classList.add('hidden');
+                        const emailInput = document.getElementById('registerEmail');
+                        const otpInput = document.getElementById('registerOTP');
+                        const pwdInput = document.getElementById('registerPassword');
+                        const pwdConfirmInput = document.getElementById('registerPasswordConfirm');
+                        if (emailInput) emailInput.value = '';
+                        if (otpInput) otpInput.value = '';
+                        if (pwdInput) pwdInput.value = '';
+                        if (pwdConfirmInput) pwdConfirmInput.value = '';
+                        registerEmail = '';
+                    }
+                }
+            });
+        });
+        observer.observe(registerPage, { attributes: true });
+    }
 });
 
 // Обновление навбара
@@ -75,19 +129,19 @@ function updateNavbar() {
     if (currentUser) {
         const menuItems = `
             ${currentUser.role === 'shipper' ? `
-                <a href="#" onclick="showPage('cargoForm'); return false;">📦 Создать груз</a>
-                <a href="#" onclick="showPage('cargoList'); return false;">📋 Мои грузы</a>
+                <a href="#" onclick="showPage('cargoForm'); return false;"><i class="fas fa-box"></i> Создать груз</a>
+                <a href="#" onclick="showPage('cargoList'); return false;"><i class="fas fa-list"></i> Мои грузы</a>
             ` : ''}
             ${currentUser.role === 'driver' ? `
-                <a href="#" onclick="showPage('driverProfile'); return false;">👤 Профиль</a>
-                <a href="#" onclick="showPage('availableCargos'); return false;">🔍 Доступные</a>
-                <a href="#" onclick="showPage('myOrders'); return false;">📋 Мои заказы</a>
+                <a href="#" onclick="showPage('driverProfile'); return false;"><i class="fas fa-user"></i> Профиль</a>
+                <a href="#" onclick="showPage('availableCargos'); return false;"><i class="fas fa-search"></i> Доступные</a>
+                <a href="#" onclick="showPage('myOrders'); return false;"><i class="fas fa-list"></i> Мои заказы</a>
             ` : ''}
             ${currentUser.role === 'admin' ? `
-                <a href="#" onclick="showPage('adminPanel'); return false;">⚙️ Админ-панель</a>
+                <a href="#" onclick="showPage('adminPanel'); return false;"><i class="fas fa-cog"></i> Админ-панель</a>
             ` : ''}
             ${!currentUser.isPaid ? `
-                <a href="#" onclick="showPage('payment'); return false;">💳 Активировать</a>
+                <a href="#" onclick="showPage('payment'); return false;"><i class="fas fa-credit-card"></i> Активировать</a>
             ` : ''}
             <span class="user-badge" style="margin: 0 12px;">${currentUser.email}</span>
             <button onclick="handleLogout(); return false;">Выход</button>
@@ -126,14 +180,31 @@ async function apiRequest(url, options = {}) {
             headers
         });
         
+        // Проверяем Content-Type перед парсингом
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            // Если ответ не JSON, читаем как текст
+            const text = await response.text();
+            throw new Error(`Ожидался JSON, получен: ${contentType || 'unknown'}. Статус: ${response.status}. Ответ: ${text.substring(0, 200)}`);
+        }
+        
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'Ошибка запроса');
+            throw new Error(data.message || `Ошибка запроса (${response.status})`);
         }
         
         return data;
     } catch (error) {
+        // Если это уже наша ошибка, пробрасываем её
+        if (error.message && error.message.includes('Ожидался JSON')) {
+            throw error;
+        }
+        // Если это SyntaxError от JSON.parse, значит получили не JSON
+        if (error instanceof SyntaxError || error.message.includes('Unexpected token')) {
+            throw new Error(`Сервер вернул не JSON. Проверьте, что API endpoint существует и сервер запущен.`);
+        }
+        // Пробрасываем остальные ошибки
         throw error;
     }
 }
@@ -163,6 +234,182 @@ async function checkAuth() {
 }
 
 // Регистрация
+// Переход к шагу регистрации
+function goToRegisterStep(step) {
+    document.querySelectorAll('.register-step-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.register-step').forEach((el, idx) => {
+        if (idx + 1 === step) {
+            el.style.background = 'var(--primary)';
+            el.style.color = 'white';
+        } else {
+            el.style.background = 'var(--gray-300)';
+            el.style.color = 'var(--gray-600)';
+        }
+    });
+    
+    if (step === 1) {
+        document.getElementById('registerStep1Content').classList.remove('hidden');
+    } else if (step === 2) {
+        document.getElementById('registerStep2Content').classList.remove('hidden');
+    } else if (step === 3) {
+        document.getElementById('registerStep3Content').classList.remove('hidden');
+    }
+}
+
+// Отправка OTP
+async function handleSendOTP(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('registerError');
+    const successDiv = document.getElementById('registerSuccess');
+    const btn = document.getElementById('sendOTPBtn');
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    const email = document.getElementById('registerEmail').value.toLowerCase().trim();
+    const role = document.getElementById('registerRole').value;
+    
+    registerEmail = email;
+    registerRole = role;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Отправка...';
+    
+    try {
+        await apiRequest('/auth/send-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        
+        successDiv.textContent = 'Код подтверждения отправлен на вашу почту!';
+        successDiv.classList.remove('hidden');
+        document.getElementById('registerEmailDisplay').textContent = email;
+        goToRegisterStep(2);
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Ошибка отправки кода';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить код';
+    }
+}
+
+// Повторная отправка OTP
+async function handleResendOTP() {
+    const errorDiv = document.getElementById('registerError');
+    const successDiv = document.getElementById('registerSuccess');
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    try {
+        await apiRequest('/auth/send-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email: registerEmail })
+        });
+        
+        successDiv.textContent = 'Код отправлен повторно!';
+        successDiv.classList.remove('hidden');
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Ошибка отправки кода';
+        errorDiv.classList.remove('hidden');
+    }
+}
+
+// Проверка OTP
+async function handleVerifyOTP(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('registerError');
+    const successDiv = document.getElementById('registerSuccess');
+    const btn = document.getElementById('verifyOTPBtn');
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    const code = document.getElementById('registerOTP').value;
+    
+    if (code.length !== 6) {
+        errorDiv.textContent = 'Код должен содержать 6 цифр';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Проверка...';
+    
+    try {
+        await apiRequest('/auth/verify-otp', {
+            method: 'POST',
+            body: JSON.stringify({ email: registerEmail, code })
+        });
+        
+        successDiv.textContent = 'Email успешно подтвержден!';
+        successDiv.classList.remove('hidden');
+        goToRegisterStep(3);
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Неверный код';
+        errorDiv.classList.remove('hidden');
+        document.getElementById('registerOTP').value = '';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить';
+    }
+}
+
+// Валидация пароля в реальном времени
+function validatePasswordInput() {
+    const password = document.getElementById('registerPassword').value;
+    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+    const matchDiv = document.getElementById('passwordMatch');
+    const matchText = document.getElementById('passwordMatchText');
+    
+    // Проверка требований
+    const requirements = {
+        min: password.length >= 8,
+        upper: /[A-ZА-Я]/.test(password),
+        lower: /[a-zа-я]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    
+    document.getElementById('passwordReqMin').innerHTML = requirements.min 
+        ? '<i class="fas fa-check"></i> Минимум 8 символов'
+        : '<i class="fas fa-times"></i> Минимум 8 символов';
+    document.getElementById('passwordReqMin').className = requirements.min ? 'valid' : 'invalid';
+    
+    document.getElementById('passwordReqUpper').innerHTML = requirements.upper 
+        ? '<i class="fas fa-check"></i> Заглавная буква'
+        : '<i class="fas fa-times"></i> Заглавная буква';
+    document.getElementById('passwordReqUpper').className = requirements.upper ? 'valid' : 'invalid';
+    
+    document.getElementById('passwordReqLower').innerHTML = requirements.lower 
+        ? '<i class="fas fa-check"></i> Строчная буква'
+        : '<i class="fas fa-times"></i> Строчная буква';
+    document.getElementById('passwordReqLower').className = requirements.lower ? 'valid' : 'invalid';
+    
+    document.getElementById('passwordReqNumber').innerHTML = requirements.number 
+        ? '<i class="fas fa-check"></i> Цифра'
+        : '<i class="fas fa-times"></i> Цифра';
+    document.getElementById('passwordReqNumber').className = requirements.number ? 'valid' : 'invalid';
+    
+    document.getElementById('passwordReqSpecial').innerHTML = requirements.special 
+        ? '<i class="fas fa-check"></i> Специальный символ (!@#$%^&*)'
+        : '<i class="fas fa-times"></i> Специальный символ (!@#$%^&*)';
+    document.getElementById('passwordReqSpecial').className = requirements.special ? 'valid' : 'invalid';
+    
+    // Проверка совпадения паролей
+    if (passwordConfirm.length > 0) {
+        matchDiv.style.display = 'block';
+        if (password === passwordConfirm) {
+            matchText.innerHTML = '<i class="fas fa-check" style="color: var(--success);"></i> Пароли совпадают';
+            matchText.style.color = 'var(--success)';
+        } else {
+            matchText.innerHTML = '<i class="fas fa-times" style="color: var(--error);"></i> Пароли не совпадают';
+            matchText.style.color = 'var(--error)';
+        }
+    } else {
+        matchDiv.style.display = 'none';
+    }
+}
+
+// Регистрация (после проверки OTP)
 async function handleRegister(e) {
     e.preventDefault();
     const errorDiv = document.getElementById('registerError');
@@ -178,6 +425,21 @@ async function handleRegister(e) {
         return;
     }
     
+    // Проверка требований к паролю
+    const requirements = {
+        min: password.length >= 8,
+        upper: /[A-ZА-Я]/.test(password),
+        lower: /[a-zа-я]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    
+    if (!Object.values(requirements).every(req => req === true)) {
+        errorDiv.textContent = 'Пароль не соответствует требованиям безопасности';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+    
     btn.disabled = true;
     btn.innerHTML = '<span class="loading"></span> Регистрация...';
     
@@ -185,9 +447,9 @@ async function handleRegister(e) {
         const data = await apiRequest('/auth/register', {
             method: 'POST',
             body: JSON.stringify({
-                email: document.getElementById('registerEmail').value,
+                email: registerEmail,
                 password: password,
-                role: document.getElementById('registerRole').value
+                role: registerRole
             })
         });
         
@@ -196,7 +458,11 @@ async function handleRegister(e) {
         currentUser = data.user;
         showPage('payment');
     } catch (error) {
-        errorDiv.textContent = error.message;
+        if (error.errors && Array.isArray(error.errors)) {
+            errorDiv.textContent = error.errors.join(', ');
+        } else {
+            errorDiv.textContent = error.message || 'Ошибка регистрации';
+        }
         errorDiv.classList.remove('hidden');
     } finally {
         btn.disabled = false;
@@ -256,10 +522,10 @@ async function handleActivate() {
         });
         
         currentUser = data.user;
-        alert('✅ Аккаунт успешно активирован!');
+        alert('Аккаунт успешно активирован!');
         showPage('dashboard');
     } catch (error) {
-        alert('❌ Ошибка: ' + error.message);
+        alert('Ошибка: ' + error.message);
     } finally {
         btn.disabled = false;
         btn.textContent = 'Активировать аккаунт';
@@ -359,7 +625,7 @@ async function handleCreateCargo(e) {
             body: JSON.stringify(cargoData)
         });
         
-        alert('✅ Груз успешно создан!');
+        alert('Груз успешно создан!');
         document.querySelector('#cargoForm form').reset();
         showPage('cargoList');
     } catch (error) {
@@ -411,7 +677,7 @@ function renderCargoList(cargos) {
     if (cargos.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-icon">📦</div>
+                <div class="empty-state-icon"><i class="fas fa-box" style="font-size: 64px;"></i></div>
                 <h3>Грузы не найдены</h3>
                 <p style="margin-top: 8px;">Попробуйте изменить фильтры</p>
             </div>
@@ -494,22 +760,22 @@ function renderCargoList(cargos) {
                 <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: var(--radius);">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div>
-                            <strong style="color: var(--gray-700);">📍 Откуда:</strong>
+                            <strong style="color: var(--gray-700);"><i class="fas fa-map-marker-alt"></i> Откуда:</strong>
                             <p style="margin-top: 4px;">${cargo.pickupLocation?.city || ''}, ${cargo.pickupLocation?.address || ''}</p>
                         </div>
                         <div>
-                            <strong style="color: var(--gray-700);">🎯 Куда:</strong>
+                            <strong style="color: var(--gray-700);"><i class="fas fa-map-marked-alt"></i> Куда:</strong>
                             <p style="margin-top: 4px;">${cargo.deliveryLocation?.city || ''}, ${cargo.deliveryLocation?.address || ''}</p>
                         </div>
                     </div>
                     <div style="margin-top: 12px; display: flex; gap: 24px; flex-wrap: wrap;">
                         <div>
-                            <strong style="color: var(--gray-700); font-size: 13px;">📅 Загрузка:</strong>
+                            <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-calendar"></i> Загрузка:</strong>
                             <span style="margin-left: 8px;">${new Date(cargo.pickupDate).toLocaleDateString('ru-RU')}</span>
                         </div>
                         ${cargo.deliveryDate ? `
                         <div>
-                            <strong style="color: var(--gray-700); font-size: 13px;">📅 Доставка:</strong>
+                            <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-calendar"></i> Доставка:</strong>
                             <span style="margin-left: 8px;">${new Date(cargo.deliveryDate).toLocaleDateString('ru-RU')}</span>
                         </div>
                         ` : ''}
@@ -518,14 +784,14 @@ function renderCargoList(cargos) {
                 
                 ${cargo.comment ? `
                 <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid var(--warning); border-radius: var(--radius);">
-                    <strong style="color: var(--gray-700);">💬 Комментарий:</strong>
+                    <strong style="color: var(--gray-700);"><i class="fas fa-comment"></i> Комментарий:</strong>
                     <p style="margin-top: 4px; color: var(--gray-700);">${cargo.comment}</p>
                 </div>
                 ` : ''}
                 
                 ${cargo.assignedDriver ? `
                 <div class="contact-card" style="margin-top: 16px;">
-                    <h4 style="margin-bottom: 12px;">👤 Водитель назначен</h4>
+                    <h4 style="margin-bottom: 12px;"><i class="fas fa-user"></i> Водитель назначен</h4>
                     <div class="contact-info">
                         <div class="contact-item">
                             <strong>Email:</strong>
@@ -579,11 +845,11 @@ async function loadDashboard() {
         content.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
                 <button class="btn btn-primary" onclick="showPage('cargoForm')" style="padding: 24px; flex-direction: column; gap: 12px;">
-                    <span style="font-size: 32px;">📦</span>
+                    <i class="fas fa-box" style="font-size: 32px;"></i>
                     <span>Создать груз</span>
                 </button>
                 <button class="btn btn-secondary" onclick="showPage('cargoList')" style="padding: 24px; flex-direction: column; gap: 12px;">
-                    <span style="font-size: 32px;">📋</span>
+                    <i class="fas fa-list" style="font-size: 32px;"></i>
                     <span>Мои грузы</span>
                 </button>
             </div>
@@ -592,15 +858,15 @@ async function loadDashboard() {
         content.innerHTML = `
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
                 <button class="btn btn-primary" onclick="showPage('driverProfile')" style="padding: 24px; flex-direction: column; gap: 12px;">
-                    <span style="font-size: 32px;">👤</span>
+                    <i class="fas fa-user" style="font-size: 32px;"></i>
                     <span>Мой профиль</span>
                 </button>
                 <button class="btn btn-secondary" onclick="showPage('availableCargos')" style="padding: 24px; flex-direction: column; gap: 12px;">
-                    <span style="font-size: 32px;">🔍</span>
+                    <i class="fas fa-search" style="font-size: 32px;"></i>
                     <span>Доступные грузы</span>
                 </button>
                 <button class="btn btn-success" onclick="showPage('myOrders')" style="padding: 24px; flex-direction: column; gap: 12px;">
-                    <span style="font-size: 32px;">📋</span>
+                    <i class="fas fa-list" style="font-size: 32px;"></i>
                     <span>Мои заказы</span>
                 </button>
             </div>
@@ -632,7 +898,7 @@ async function handleSaveDriverProfile(e) {
             })
         });
         
-        successDiv.innerHTML = '<strong>✅ Профиль сохранен!</strong> Ожидайте подтверждения администратором.';
+        successDiv.innerHTML = '<strong><i class="fas fa-check-circle"></i> Профиль сохранен!</strong> Ожидайте подтверждения администратором.';
         successDiv.classList.remove('hidden');
         errorDiv.classList.add('hidden');
     } catch (error) {
@@ -710,7 +976,7 @@ function renderAvailableCargos(cargos) {
     if (cargos.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-icon"><i class="fas fa-inbox" style="font-size: 64px;"></i></div>
                 <h3>Грузы не найдены</h3>
                 <p style="margin-top: 8px;">Попробуйте изменить фильтры</p>
             </div>
@@ -783,36 +1049,36 @@ function renderAvailableCargos(cargos) {
                 <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: var(--radius);">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                         <div>
-                            <strong style="color: var(--gray-700);">📍 Откуда:</strong>
+                            <strong style="color: var(--gray-700);"><i class="fas fa-map-marker-alt"></i> Откуда:</strong>
                             <p style="margin-top: 4px;">${cargo.pickupLocation?.city || ''}, ${cargo.pickupLocation?.address || ''}</p>
                         </div>
                         <div>
-                            <strong style="color: var(--gray-700);">🎯 Куда:</strong>
+                            <strong style="color: var(--gray-700);"><i class="fas fa-map-marked-alt"></i> Куда:</strong>
                             <p style="margin-top: 4px;">${cargo.deliveryLocation?.city || ''}, ${cargo.deliveryLocation?.address || ''}</p>
                         </div>
                     </div>
                     <div style="margin-top: 12px;">
-                        <strong style="color: var(--gray-700); font-size: 13px;">📅 Дата загрузки:</strong>
+                        <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-calendar"></i> Дата загрузки:</strong>
                         <span style="margin-left: 8px;">${new Date(cargo.pickupDate).toLocaleDateString('ru-RU')}</span>
                     </div>
                 </div>
                 
                 ${cargo.comment ? `
                 <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid var(--warning); border-radius: var(--radius);">
-                    <strong style="color: var(--gray-700);">💬 Комментарий:</strong>
+                    <strong style="color: var(--gray-700);"><i class="fas fa-comment"></i> Комментарий:</strong>
                     <p style="margin-top: 4px; color: var(--gray-700);">${cargo.comment}</p>
                 </div>
                 ` : ''}
                 
                 ${cargo.shipper ? `
                 <div style="margin-top: 16px; padding: 12px; background: var(--gray-100); border-radius: var(--radius);">
-                    <strong style="color: var(--gray-700); font-size: 13px;">📧 Грузоотправитель:</strong>
+                    <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-envelope"></i> Грузоотправитель:</strong>
                     <span style="margin-left: 8px;">${cargo.shipper.email}</span>
                 </div>
                 ` : ''}
                 
                 <button class="btn btn-success" onclick="acceptOrder(${cargo.id})" style="width: 100%; margin-top: 16px;">
-                    ✅ Принять заказ
+                    <i class="fas fa-check"></i> Принять заказ
                 </button>
             </div>
         `).join('');
@@ -836,17 +1102,17 @@ async function acceptOrder(cargoId) {
         // Показываем контактную информацию
         const contactInfo = `
             <div class="contact-card" style="margin-top: 20px;">
-                <h4 style="margin-bottom: 16px;">✅ Заказ принят! Контакты грузоотправителя:</h4>
+                <h4 style="margin-bottom: 16px;"><i class="fas fa-check-circle"></i> Заказ принят! Контакты грузоотправителя:</h4>
                 <div class="contact-info">
                     <div class="contact-item">
-                        <strong>📧 Email:</strong>
+                        <strong><i class="fas fa-envelope"></i> Email:</strong>
                         <a href="mailto:${cargo.shipper.email}" style="color: white; text-decoration: underline;">
                             ${cargo.shipper.email}
                         </a>
                     </div>
                     ${cargo.shipper.profile?.phone ? `
                     <div class="contact-item">
-                        <strong>📱 Телефон:</strong>
+                        <strong><i class="fas fa-phone"></i> Телефон:</strong>
                         <a href="tel:${cargo.shipper.profile.phone}" style="color: white; text-decoration: underline;">
                             ${cargo.shipper.profile.phone}
                         </a>
@@ -854,19 +1120,19 @@ async function acceptOrder(cargoId) {
                     ` : ''}
                     ${cargo.shipper.profile?.company ? `
                     <div class="contact-item">
-                        <strong>🏢 Компания:</strong>
+                        <strong><i class="fas fa-building"></i> Компания:</strong>
                         <span>${cargo.shipper.profile.company}</span>
                     </div>
                     ` : ''}
                     ${cargo.shipper.profile?.firstName || cargo.shipper.profile?.lastName ? `
                     <div class="contact-item">
-                        <strong>👤 Контактное лицо:</strong>
+                        <strong><i class="fas fa-user"></i> Контактное лицо:</strong>
                         <span>${cargo.shipper.profile.firstName || ''} ${cargo.shipper.profile.lastName || ''}</span>
                     </div>
                     ` : ''}
                 </div>
                 <div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.2); border-radius: var(--radius);">
-                    <strong>💡 Совет:</strong> Свяжитесь с грузоотправителем для уточнения деталей доставки
+                    <strong><i class="fas fa-lightbulb"></i> Совет:</strong> Свяжитесь с грузоотправителем для уточнения деталей доставки
                 </div>
             </div>
         `;
@@ -889,7 +1155,7 @@ async function acceptOrder(cargoId) {
         modal.innerHTML = `
             <div class="card" style="max-width: 600px; width: 100%; position: relative; max-height: 90vh; overflow-y: auto;">
                 <button id="closeModalBtn" class="modal-close-btn" type="button">×</button>
-                <h2 style="margin-bottom: 20px;">✅ Заказ принят!</h2>
+                <h2 style="margin-bottom: 20px;"><i class="fas fa-check-circle"></i> Заказ принят!</h2>
                 ${contactInfo}
                 <button id="understandBtn" class="btn btn-primary" type="button" style="width: 100%; margin-top: 20px;">
                     Понятно
@@ -928,7 +1194,7 @@ async function acceptOrder(cargoId) {
         };
         document.addEventListener('keydown', handleEscape);
     } catch (error) {
-        alert('❌ Ошибка: ' + error.message);
+        alert('Ошибка: ' + error.message);
     }
 }
 
@@ -969,7 +1235,7 @@ function renderMyOrders(orders) {
     if (orders.length === 0) {
         content.innerHTML = `
             <div class="empty-state">
-                <div class="empty-state-icon">📭</div>
+                <div class="empty-state-icon"><i class="fas fa-inbox" style="font-size: 64px;"></i></div>
                 <h3>Заказы не найдены</h3>
                 <p style="margin-top: 8px;">Попробуйте изменить фильтры</p>
             </div>
@@ -1052,22 +1318,22 @@ function renderMyOrders(orders) {
                     <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: var(--radius);">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                             <div>
-                                <strong style="color: var(--gray-700);">📍 Откуда:</strong>
+                                <strong style="color: var(--gray-700);"><i class="fas fa-map-marker-alt"></i> Откуда:</strong>
                                 <p style="margin-top: 4px;">${cargo.pickupLocation?.city || ''}, ${cargo.pickupLocation?.address || ''}</p>
                             </div>
                             <div>
-                                <strong style="color: var(--gray-700);">🎯 Куда:</strong>
+                                <strong style="color: var(--gray-700);"><i class="fas fa-map-marked-alt"></i> Куда:</strong>
                                 <p style="margin-top: 4px;">${cargo.deliveryLocation?.city || ''}, ${cargo.deliveryLocation?.address || ''}</p>
                             </div>
                         </div>
                         <div style="margin-top: 12px; display: flex; gap: 24px; flex-wrap: wrap;">
                             <div>
-                                <strong style="color: var(--gray-700); font-size: 13px;">📅 Загрузка:</strong>
+                                <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-calendar"></i> Загрузка:</strong>
                                 <span style="margin-left: 8px;">${new Date(cargo.pickupDate).toLocaleDateString('ru-RU')}</span>
                             </div>
                             ${cargo.deliveryDate ? `
                             <div>
-                                <strong style="color: var(--gray-700); font-size: 13px;">📅 Доставка:</strong>
+                                <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-calendar"></i> Доставка:</strong>
                                 <span style="margin-left: 8px;">${new Date(cargo.deliveryDate).toLocaleDateString('ru-RU')}</span>
                             </div>
                             ` : ''}
@@ -1076,7 +1342,7 @@ function renderMyOrders(orders) {
                     
                     ${cargo.comment ? `
                     <div style="margin-top: 16px; padding: 12px; background: #fef3c7; border-left: 4px solid var(--warning); border-radius: var(--radius);">
-                        <strong style="color: var(--gray-700);">💬 Комментарий:</strong>
+                        <strong style="color: var(--gray-700);"><i class="fas fa-comment"></i> Комментарий:</strong>
                         <p style="margin-top: 4px; color: var(--gray-700);">${cargo.comment}</p>
                     </div>
                     ` : ''}
@@ -1086,14 +1352,14 @@ function renderMyOrders(orders) {
                         <h4 style="margin-bottom: 12px;">📞 Контакты грузоотправителя</h4>
                         <div class="contact-info">
                             <div class="contact-item">
-                                <strong>📧 Email:</strong>
+                                <strong><i class="fas fa-envelope"></i> Email:</strong>
                                 <a href="mailto:${cargo.shipper.email}" style="color: white; text-decoration: underline;">
                                     ${cargo.shipper.email}
                                 </a>
                             </div>
                             ${cargo.shipper.profile?.phone ? `
                             <div class="contact-item">
-                                <strong>📱 Телефон:</strong>
+                                <strong><i class="fas fa-phone"></i> Телефон:</strong>
                                 <a href="tel:${cargo.shipper.profile.phone}" style="color: white; text-decoration: underline;">
                                     ${cargo.shipper.profile.phone}
                                 </a>
@@ -1101,13 +1367,13 @@ function renderMyOrders(orders) {
                             ` : ''}
                             ${cargo.shipper.profile?.company ? `
                             <div class="contact-item">
-                                <strong>🏢 Компания:</strong>
+                                <strong><i class="fas fa-building"></i> Компания:</strong>
                                 <span>${cargo.shipper.profile.company}</span>
                             </div>
                             ` : ''}
                             ${cargo.shipper.profile?.firstName || cargo.shipper.profile?.lastName ? `
                             <div class="contact-item">
-                                <strong>👤 Контактное лицо:</strong>
+                                <strong><i class="fas fa-user"></i> Контактное лицо:</strong>
                                 <span>${cargo.shipper.profile.firstName || ''} ${cargo.shipper.profile.lastName || ''}</span>
                             </div>
                             ` : ''}
@@ -1119,7 +1385,35 @@ function renderMyOrders(orders) {
         }).join('');
 }
 
+// Вспомогательная функция для форматирования даты
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Вспомогательная функция для статуса груза
+function getCargoStatusBadge(status) {
+    const statusMap = {
+        'pending': { text: 'Ожидает', class: 'badge-warning' },
+        'assigned': { text: 'Назначен', class: 'badge-info' },
+        'in_transit': { text: 'В пути', class: 'badge-info' },
+        'delivered': { text: 'Доставлен', class: 'badge-success' },
+        'cancelled': { text: 'Отменен', class: 'badge-danger' }
+    };
+    const statusInfo = statusMap[status] || { text: status, class: 'badge-secondary' };
+    return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
+}
+
 // Загрузка админ-панели
+let currentAdminTab = 'stats';
+
 async function loadAdminPanel() {
     try {
         const [driversData, statsData] = await Promise.all([
@@ -1133,83 +1427,313 @@ async function loadAdminPanel() {
             return;
         }
         
-        content.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">👥</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalUsers}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Всего пользователей</div>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--success);">${statsData.paidUsers}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Оплативших</div>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">🚚</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalDrivers}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Всего водителей</div>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">✓</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--success);">${statsData.verifiedDrivers}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Подтвержденных</div>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">📦</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalCargos}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Всего грузов</div>
-                </div>
-                <div class="card" style="text-align: center;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">🔄</div>
-                    <div style="font-size: 24px; font-weight: 600; color: var(--warning);">${statsData.activeCargos}</div>
-                    <div style="color: var(--gray-600); font-size: 14px;">Активных</div>
-                </div>
+        // Вкладки
+        const tabs = `
+            <div style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--gray-200); flex-wrap: wrap;">
+                <button class="btn ${currentAdminTab === 'stats' ? 'btn-primary' : 'btn-secondary'}" 
+                        onclick="switchAdminTab('stats')" 
+                        style="border-radius: 8px 8px 0 0; border: none; border-bottom: ${currentAdminTab === 'stats' ? '3px solid var(--primary)' : 'none'};">
+                    <i class="fas fa-chart-bar"></i> Статистика
+                </button>
+                <button class="btn ${currentAdminTab === 'users' ? 'btn-primary' : 'btn-secondary'}" 
+                        onclick="switchAdminTab('users')"
+                        style="border-radius: 8px 8px 0 0; border: none; border-bottom: ${currentAdminTab === 'users' ? '3px solid var(--primary)' : 'none'};">
+                    <i class="fas fa-users"></i> Пользователи
+                </button>
+                <button class="btn ${currentAdminTab === 'cargos' ? 'btn-primary' : 'btn-secondary'}" 
+                        onclick="switchAdminTab('cargos')"
+                        style="border-radius: 8px 8px 0 0; border: none; border-bottom: ${currentAdminTab === 'cargos' ? '3px solid var(--primary)' : 'none'};">
+                    <i class="fas fa-box"></i> Грузы
+                </button>
+                <button class="btn ${currentAdminTab === 'drivers' ? 'btn-primary' : 'btn-secondary'}" 
+                        onclick="switchAdminTab('drivers')"
+                        style="border-radius: 8px 8px 0 0; border: none; border-bottom: ${currentAdminTab === 'drivers' ? '3px solid var(--primary)' : 'none'};">
+                    <i class="fas fa-truck"></i> Водители
+                </button>
             </div>
-            
-            <h3 style="margin-bottom: 20px;">Водители на подтверждение</h3>
-            ${driversData.drivers.length === 0 ? `
-                <div class="empty-state">
-                    <div class="empty-state-icon">✅</div>
-                    <h3>Все водители подтверждены</h3>
-                </div>
-            ` : driversData.drivers.map(driver => `
-                <div class="card" style="margin-bottom: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 16px;">
-                        <div style="flex: 1;">
-                            <h4 style="margin-bottom: 12px;">${driver.user?.profile?.firstName || ''} ${driver.user?.profile?.lastName || ''}</h4>
-                            <div style="display: flex; flex-direction: column; gap: 8px;">
-                                <div><strong>Email:</strong> ${driver.user?.email}</div>
-                                <div><strong>Номер лицензии:</strong> ${driver.licenseNumber}</div>
-                                <div><strong>Тип транспорта:</strong> ${driver.vehicleType}</div>
-                                <div><strong>Номер транспорта:</strong> ${driver.vehicleNumber}</div>
-                                <div>
-                                    <strong>Статус:</strong> 
-                                    ${driver.isVerified ? 
-                                        '<span class="badge badge-success">Подтвержден</span>' : 
-                                        '<span class="badge badge-warning">Ожидает подтверждения</span>'
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            ${!driver.isVerified ? `
-                                <button class="btn btn-success btn-sm" onclick="verifyDriver(${driver.id})">
-                                    ✓ Подтвердить
-                                </button>
-                            ` : `
-                                <button class="btn btn-danger btn-sm" onclick="rejectDriver(${driver.id})">
-                                    ✗ Отклонить
-                                </button>
-                            `}
-                        </div>
+        `;
+        
+        let tabContent = '';
+        
+        if (currentAdminTab === 'stats') {
+            tabContent = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-users"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalUsers}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Всего пользователей</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-circle" style="color: var(--success);"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--success);">${statsData.activeUsers || 0}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Активных (30 дней)</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-check-circle"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--success);">${statsData.paidUsers}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Оплативших</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-truck"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalDrivers}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Всего водителей</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-check"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--success);">${statsData.verifiedDrivers}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Подтвержденных</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-box"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--primary);">${statsData.totalCargos}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Всего грузов</div>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <div style="font-size: 32px; margin-bottom: 8px;"><i class="fas fa-sync-alt"></i></div>
+                        <div style="font-size: 24px; font-weight: 600; color: var(--warning);">${statsData.activeCargos}</div>
+                        <div style="color: var(--gray-600); font-size: 14px;">Активных</div>
                     </div>
                 </div>
-            `).join('')}
-        `;
+            `;
+        } else if (currentAdminTab === 'users') {
+            tabContent = await renderAdminUsers();
+        } else if (currentAdminTab === 'cargos') {
+            tabContent = await renderAdminCargos();
+        } else if (currentAdminTab === 'drivers') {
+            tabContent = `
+                <h3 style="margin-bottom: 20px;">Водители на подтверждение</h3>
+                ${driversData.drivers.length === 0 ? `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-check-circle" style="font-size: 64px;"></i></div>
+                        <h3>Все водители подтверждены</h3>
+                    </div>
+                ` : driversData.drivers.map(driver => `
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 16px;">
+                            <div style="flex: 1;">
+                                <h4 style="margin-bottom: 12px;">${driver.user?.profile?.firstName || ''} ${driver.user?.profile?.lastName || ''}</h4>
+                                <div style="display: flex; flex-direction: column; gap: 8px;">
+                                    <div><strong>Email:</strong> ${driver.user?.email}</div>
+                                    <div><strong>Номер лицензии:</strong> ${driver.licenseNumber}</div>
+                                    <div><strong>Тип транспорта:</strong> ${driver.vehicleType}</div>
+                                    <div><strong>Номер транспорта:</strong> ${driver.vehicleNumber}</div>
+                                    <div>
+                                        <strong>Статус:</strong> 
+                                        ${driver.isVerified ? 
+                                            '<span class="badge badge-success">Подтвержден</span>' : 
+                                            '<span class="badge badge-warning">Ожидает подтверждения</span>'
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                ${!driver.isVerified ? `
+                                    <button class="btn btn-success btn-sm" onclick="verifyDriver(${driver.id})">
+                                        <i class="fas fa-check"></i> Подтвердить
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-danger btn-sm" onclick="rejectDriver(${driver.id})">
+                                        <i class="fas fa-times"></i> Отклонить
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        content.innerHTML = tabs + tabContent;
     } catch (error) {
         document.getElementById('adminContent').innerHTML = 
             `<div class="alert alert-error">${error.message}</div>`;
+    }
+}
+
+// Переключение вкладок админ-панели
+function switchAdminTab(tab) {
+    currentAdminTab = tab;
+    loadAdminPanel();
+}
+
+// Рендер пользователей для админ-панели
+async function renderAdminUsers(page = 1) {
+    try {
+        const usersData = await apiRequest(`/admin/users?page=${page}&limit=20`);
+        
+        return `
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 16px;">Все пользователи (${usersData.total})</h3>
+                ${usersData.users.length === 0 ? `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-users" style="font-size: 64px;"></i></div>
+                        <h3>Пользователи не найдены</h3>
+                    </div>
+                ` : `
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--gray-100); border-bottom: 2px solid var(--gray-200);">
+                                    <th style="padding: 12px; text-align: left;">ID</th>
+                                    <th style="padding: 12px; text-align: left;">Email</th>
+                                    <th style="padding: 12px; text-align: left;">Роль</th>
+                                    <th style="padding: 12px; text-align: left;">Статус оплаты</th>
+                                    <th style="padding: 12px; text-align: left;">Вход</th>
+                                    <th style="padding: 12px; text-align: left;">Регистрация</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${usersData.users.map(user => `
+                                    <tr style="border-bottom: 1px solid var(--gray-200);">
+                                        <td style="padding: 12px;">${user.id}</td>
+                                        <td style="padding: 12px;">${user.email}</td>
+                                        <td style="padding: 12px;">
+                                            <span class="badge ${user.role === 'admin' ? 'badge-danger' : user.role === 'driver' ? 'badge-info' : 'badge-secondary'}">
+                                                ${user.role === 'admin' ? 'Админ' : user.role === 'driver' ? 'Водитель' : 'Грузоотправитель'}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 12px;">
+                                            ${user.isPaid ? 
+                                                '<span class="badge badge-success">Оплачен</span>' : 
+                                                '<span class="badge badge-warning">Не оплачен</span>'
+                                            }
+                                        </td>
+                                        <td style="padding: 12px; font-size: 13px; color: var(--gray-600);">
+                                            ${formatDate(user.lastLogin)}
+                                        </td>
+                                        <td style="padding: 12px; font-size: 13px; color: var(--gray-600);">
+                                            ${formatDate(user.createdAt)}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${usersData.totalPages > 1 ? `
+                        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                            <button class="btn btn-secondary btn-sm" ${page <= 1 ? 'disabled' : ''} 
+                                    onclick="switchAdminUsersPage(${page - 1})">
+                                ← Назад
+                            </button>
+                            <span style="padding: 8px 16px; align-self: center;">Страница ${page} из ${usersData.totalPages}</span>
+                            <button class="btn btn-secondary btn-sm" ${page >= usersData.totalPages ? 'disabled' : ''} 
+                                    onclick="switchAdminUsersPage(${page + 1})">
+                                Вперед →
+                            </button>
+                        </div>
+                    ` : ''}
+                `}
+            </div>
+        `;
+    } catch (error) {
+        return `<div class="alert alert-error">Ошибка загрузки пользователей: ${error.message}</div>`;
+    }
+}
+
+// Переключение страницы пользователей
+async function switchAdminUsersPage(page) {
+    currentAdminTab = 'users';
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
+    const tabs = content.innerHTML.split('<h3')[0];
+    const usersContent = await renderAdminUsers(page);
+    content.innerHTML = tabs + usersContent;
+}
+
+// Рендер грузов для админ-панели
+async function renderAdminCargos(page = 1) {
+    try {
+        const cargosData = await apiRequest(`/admin/cargos?page=${page}&limit=20`);
+        
+        return `
+            <div style="margin-bottom: 20px;">
+                <h3 style="margin-bottom: 16px;">Все грузы (${cargosData.total})</h3>
+                ${cargosData.cargos.length === 0 ? `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-box" style="font-size: 64px;"></i></div>
+                        <h3>Грузы не найдены</h3>
+                    </div>
+                ` : cargosData.cargos.map(cargo => `
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 16px;">
+                            <div style="flex: 1; min-width: 300px;">
+                                <h4 style="margin-bottom: 12px;">${cargo.title}</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                                    <div>
+                                        <strong>Откуда:</strong> ${cargo.pickupLocation?.city || '-'}<br>
+                                        <strong>Куда:</strong> ${cargo.deliveryLocation?.city || '-'}
+                                    </div>
+                                    <div>
+                                        <strong>Вес:</strong> ${cargo.weightKg} кг (${cargo.weightTons} т)<br>
+                                        <strong>Цена:</strong> ${parseFloat(cargo.totalPrice).toLocaleString('ru-RU')} ₸
+                                    </div>
+                                    <div>
+                                        <strong>Статус:</strong> ${getCargoStatusBadge(cargo.status)}<br>
+                                        <strong>Тип:</strong> ${cargo.cargoType || '-'}
+                                    </div>
+                                    <div>
+                                        <strong>Грузоотправитель:</strong> ${cargo.shipper?.email || '-'}<br>
+                                        <strong>Водитель:</strong> ${cargo.assignedDriver?.email || 'Не назначен'}
+                                    </div>
+                                </div>
+                                <div style="font-size: 13px; color: var(--gray-600);">
+                                    Создан: ${formatDate(cargo.createdAt)}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-direction: column;">
+                                <button class="btn btn-danger btn-sm" onclick="deleteCargoAdmin(${cargo.id})" title="Удалить">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+                ${cargosData.totalPages > 1 ? `
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-top: 20px;">
+                        <button class="btn btn-secondary btn-sm" ${page <= 1 ? 'disabled' : ''} 
+                                onclick="switchAdminCargosPage(${page - 1})">
+                            ← Назад
+                        </button>
+                        <span style="padding: 8px 16px; align-self: center;">Страница ${page} из ${cargosData.totalPages}</span>
+                        <button class="btn btn-secondary btn-sm" ${page >= cargosData.totalPages ? 'disabled' : ''} 
+                                onclick="switchAdminCargosPage(${page + 1})">
+                            Вперед →
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    } catch (error) {
+        return `<div class="alert alert-error">Ошибка загрузки грузов: ${error.message}</div>`;
+    }
+}
+
+// Переключение страницы грузов
+async function switchAdminCargosPage(page) {
+    currentAdminTab = 'cargos';
+    const content = document.getElementById('adminContent');
+    if (!content) return;
+    
+    const tabs = content.innerHTML.split('<h3')[0];
+    const cargosContent = await renderAdminCargos(page);
+    content.innerHTML = tabs + cargosContent;
+}
+
+// Удаление груза (модерация)
+async function deleteCargoAdmin(cargoId) {
+    if (!confirm('Вы уверены, что хотите удалить этот груз? Это действие нельзя отменить.')) {
+        return;
+    }
+    
+    try {
+        await apiRequest(`/admin/cargos/${cargoId}`, {
+            method: 'DELETE'
+        });
+        alert('Груз удален');
+        loadAdminPanel();
+    } catch (error) {
+        alert('Ошибка: ' + error.message);
     }
 }
 
@@ -1219,10 +1743,10 @@ async function verifyDriver(driverId) {
         await apiRequest(`/admin/verify-driver/${driverId}`, {
             method: 'POST'
         });
-        alert('✅ Водитель подтвержден!');
+        alert('Водитель подтвержден!');
         loadAdminPanel();
     } catch (error) {
-        alert('❌ Ошибка: ' + error.message);
+        alert('Ошибка: ' + error.message);
     }
 }
 
@@ -1239,13 +1763,17 @@ async function rejectDriver(driverId) {
         alert('Водитель отклонен');
         loadAdminPanel();
     } catch (error) {
-        alert('❌ Ошибка: ' + error.message);
+        alert('Ошибка: ' + error.message);
     }
 }
 
 // Экспортируем все функции в window для использования в onclick
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
+window.handleSendOTP = handleSendOTP;
+window.handleVerifyOTP = handleVerifyOTP;
+window.handleResendOTP = handleResendOTP;
+window.goToRegisterStep = goToRegisterStep;
 window.handleLogout = handleLogout;
 window.handleActivate = handleActivate;
 window.handleCreateCargo = handleCreateCargo;
@@ -1253,6 +1781,10 @@ window.handleSaveDriverProfile = handleSaveDriverProfile;
 window.acceptOrder = acceptOrder;
 window.verifyDriver = verifyDriver;
 window.rejectDriver = rejectDriver;
+window.switchAdminTab = switchAdminTab;
+window.switchAdminUsersPage = switchAdminUsersPage;
+window.switchAdminCargosPage = switchAdminCargosPage;
+window.deleteCargoAdmin = deleteCargoAdmin;
 window.filterCargos = filterCargos;
 window.clearCargoFilters = clearCargoFilters;
 window.filterAvailableCargos = filterAvailableCargos;

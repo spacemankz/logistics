@@ -22,7 +22,12 @@ app.use('/api/admin', require('./routes/admin'));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Все остальные маршруты отдают index.html (для SPA)
-app.get('*', (req, res) => {
+// Важно: этот маршрут должен быть ПОСЛЕ всех API маршрутов
+app.get('*', (req, res, next) => {
+  // Пропускаем API маршруты - они уже должны были быть обработаны
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API endpoint не найден' });
+  }
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 

@@ -72,6 +72,18 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
   try {
     const totalUsers = await User.count();
     const paidUsers = await User.count({ where: { isPaid: true } });
+    
+    // Активные пользователи (входили за последние 30 дней)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const activeUsers = await User.count({
+      where: {
+        lastLogin: {
+          [Op.gte]: thirtyDaysAgo
+        }
+      }
+    });
+
     const totalDrivers = await Driver.count();
     const verifiedDrivers = await Driver.count({ where: { isVerified: true } });
     const totalCargos = await Cargo.count();
@@ -86,6 +98,7 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
     res.json({
       totalUsers,
       paidUsers,
+      activeUsers,
       totalDrivers,
       verifiedDrivers,
       totalCargos,
@@ -93,6 +106,112 @@ router.get('/stats', auth, isAdmin, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка получения статистики' });
+  }
+});
+
+// Получение всех пользователей
+router.get('/users', auth, isAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, role, isPaid } = req.query;
+    const offset = (page - 1) * limit;
+
+    const where = {};
+    if (role) where.role = role;
+    if (isPaid !== undefined) where.isPaid = isPaid === 'true';
+
+    const { count, rows: users } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    res.json({
+      users,
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(count / limit)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Ошибка получения пользователей' });
+  }
+});
+
+// Получение всех грузов
+router.get('/cargos', auth, isAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status, cargoType } = req.query;
+    const offset = (page - 1) * limit;
+
+    const where = {};
+    if (status) where.status = status;
+    if (cargoType) where.cargoType = cargoType;
+
+    const { count, rows: cargos } = await Cargo.findAndCountAll({
+      where,
+      include: [
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] },
+        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'profile'] }
+      ],
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    res.json({
+      cargos,
+      total: count,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(count / limit)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Ошибка получения грузов' });
+  }
+});
+
+// Удаление груза (модерация)
+router.delete('/cargos/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const cargo = await Cargo.findByPk(req.params.id);
+    
+    if (!cargo) {
+      return res.status(404).json({ message: 'Груз не найден' });
+    }
+
+    await cargo.destroy();
+    res.json({ message: 'Груз удален' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Ошибка удаления груза' });
+  }
+});
+
+// Редактирование груза (модерация)
+router.put('/cargos/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const cargo = await Cargo.findByPk(req.params.id);
+    
+    if (!cargo) {
+      return res.status(404).json({ message: 'Груз не найден' });
+    }
+
+    await cargo.update(req.body);
+    await cargo.reload({
+      include: [
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] },
+        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'profile'] }
+      ]
+    });
+
+    res.json({ cargo });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Ошибка обновления груза' });
   }
 });
 

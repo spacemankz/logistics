@@ -2,6 +2,7 @@ const sequelize = require('../config/database');
 const User = require('./User');
 const Cargo = require('./Cargo');
 const Driver = require('./Driver');
+const OTP = require('./OTP');
 
 // Определяем связи после загрузки всех моделей
 Cargo.belongsTo(User, { as: 'shipper', foreignKey: 'shipperId' });
@@ -44,6 +45,7 @@ module.exports = {
   User,
   Cargo,
   Driver,
+  OTP,
   initDatabase
 };
 
