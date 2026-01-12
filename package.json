@@ -8,7 +8,8 @@
     "dev": "nodemon server/index.js",
     "create-admin": "node server/scripts/createAdmin.js",
     "create-mocks": "node server/scripts/createMocks.js",
-    "test-setup": "node test-setup.js"
+    "test-setup": "node test-setup.js",
+    "migrate": "node server/scripts/migrateRemoveFirebase.js"
   },
   "keywords": [
     "logistics",
