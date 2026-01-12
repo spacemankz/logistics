@@ -3,7 +3,6 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const admin = require('../config/firebase');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
 const { auth } = require('../middleware/auth');
@@ -287,80 +286,6 @@ router.post('/login', [
       message: 'Ошибка сервера при авторизации',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
-  }
-});
-
-// Аутентификация через Google (Firebase)
-router.post('/google', async (req, res) => {
-  try {
-    const { idToken } = req.body;
-
-    if (!idToken) {
-      return res.status(400).json({ message: 'ID токен не предоставлен' });
-    }
-
-    if (!admin) {
-      return res.status(503).json({ message: 'Firebase не настроен' });
-    }
-
-    // Верификация Firebase токена
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const { uid, email, name, picture } = decodedToken;
-
-    // Поиск существующего пользователя по Firebase UID или email
-    let user = await User.findOne({
-      where: {
-        [Op.or]: [
-          { firebaseUid: uid },
-          { email: email }
-        ]
-      }
-    });
-
-    if (user) {
-      // Обновляем Firebase UID если его не было
-      if (!user.firebaseUid) {
-        await user.update({
-          firebaseUid: uid,
-          authProvider: 'google',
-          lastLogin: new Date()
-        });
-      } else {
-        await user.update({ lastLogin: new Date() });
-      }
-    } else {
-      // Создаем нового пользователя
-      user = await User.create({
-        email: email,
-        firebaseUid: uid,
-        authProvider: 'google',
-        isPaid: true, // Google пользователи активированы по умолчанию
-        paymentDate: new Date(),
-        lastLogin: new Date(),
-        profile: {
-          firstName: name?.split(' ')[0] || '',
-          lastName: name?.split(' ').slice(1).join(' ') || '',
-          photoURL: picture || ''
-        }
-      });
-    }
-
-    const token = generateToken(user.id);
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        isPaid: user.isPaid,
-        profile: user.profile,
-        authProvider: user.authProvider
-      }
-    });
-  } catch (error) {
-    console.error('Ошибка Google аутентификации:', error);
-    res.status(401).json({ message: 'Ошибка аутентификации через Google' });
   }
 });
 

@@ -9,7 +9,6 @@ build/
 database.sqlite
 *.sqlite
 *.db
-firebase-service-account.json
 *.json
 !package.json
 !package-lock.json

@@ -18,22 +18,13 @@ const User = sequelize.define('User', {
   },
   password: {
     type: DataTypes.STRING,
-    allowNull: true, // Может быть null для Firebase пользователей
+    allowNull: false,
     validate: {
       len: {
         args: [6, 255],
         msg: 'Пароль должен быть от 6 до 255 символов'
       }
     }
-  },
-  firebaseUid: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    unique: true
-  },
-  authProvider: {
-    type: DataTypes.ENUM('local', 'google', 'firebase'),
-    defaultValue: 'local'
   },
   lastLogin: {
     type: DataTypes.DATE,
@@ -81,12 +72,12 @@ const User = sequelize.define('User', {
   tableName: 'users',
   hooks: {
     beforeCreate: async (user) => {
-      if (user.password && user.authProvider === 'local') {
+      if (user.password) {
         user.password = await bcrypt.hash(user.password, 10);
       }
     },
     beforeUpdate: async (user) => {
-      if (user.changed('password') && user.password && user.authProvider === 'local') {
+      if (user.changed('password') && user.password) {
         user.password = await bcrypt.hash(user.password, 10);
       }
     }
