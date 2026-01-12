@@ -87,23 +87,77 @@ const migrateRemoveFirebase = async () => {
         console.log(`📋 Копирование данных из колонок: ${columnsStr}`);
         
         try {
-          await sequelize.query(`
-            INSERT INTO users_new (${columnsStr})
-            SELECT ${columnsStr} FROM users
-          `);
-          console.log('✅ Данные скопированы');
+          // Отключаем проверку внешних ключей для копирования
+          await sequelize.query('PRAGMA foreign_keys = OFF');
+          
+          // Копируем данные построчно для обработки ошибок валидации
+          const users = await sequelize.query(
+            `SELECT ${columnsStr} FROM users`,
+            { type: QueryTypes.SELECT }
+          );
+
+          if (users.length > 0) {
+            console.log(`📋 Найдено записей для копирования: ${users.length}`);
+            let copiedCount = 0;
+            let skippedCount = 0;
+
+            for (const user of users) {
+              try {
+                // Формируем значения для INSERT
+                const values = columnsToCopy.map(col => {
+                  const value = user[col];
+                  if (value === null || value === undefined) {
+                    return 'NULL';
+                  }
+                  if (typeof value === 'string') {
+                    return `'${value.replace(/'/g, "''")}'`;
+                  }
+                  return value;
+                }).join(', ');
+
+                await sequelize.query(`
+                  INSERT INTO users_new (${columnsStr})
+                  VALUES (${values})
+                `);
+                copiedCount++;
+              } catch (rowError) {
+                console.warn(`⚠️  Пропущена запись ID ${user.id}: ${rowError.message}`);
+                skippedCount++;
+              }
+            }
+
+            console.log(`✅ Скопировано записей: ${copiedCount}`);
+            if (skippedCount > 0) {
+              console.log(`⚠️  Пропущено записей: ${skippedCount}`);
+            }
+          } else {
+            console.log('ℹ️  Таблица users пуста, копирование не требуется');
+          }
+
+          // Включаем проверку внешних ключей обратно
+          await sequelize.query('PRAGMA foreign_keys = ON');
         } catch (copyError) {
           console.warn('⚠️  Предупреждение при копировании данных:', copyError.message);
+          // Включаем проверку внешних ключей даже при ошибке
+          await sequelize.query('PRAGMA foreign_keys = ON');
           // Продолжаем, даже если копирование не удалось (таблица может быть пустой)
         }
       } else {
         console.log('ℹ️  Нет данных для копирования');
       }
 
-      // Удаляем старую таблицу и переименовываем новую
-      console.log('🔄 Замена таблицы...');
-      await sequelize.query('DROP TABLE IF EXISTS users');
-      await sequelize.query('ALTER TABLE users_new RENAME TO users');
+    // Отключаем проверку внешних ключей перед удалением таблицы
+    console.log('🔄 Отключение проверки внешних ключей...');
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+
+    // Удаляем старую таблицу и переименовываем новую
+    console.log('🔄 Замена таблицы...');
+    await sequelize.query('DROP TABLE IF EXISTS users');
+    await sequelize.query('ALTER TABLE users_new RENAME TO users');
+
+    // Включаем проверку внешних ключей обратно
+    console.log('🔄 Включение проверки внешних ключей...');
+    await sequelize.query('PRAGMA foreign_keys = ON');
 
       // Восстанавливаем индексы
       console.log('📝 Восстановление индексов...');
