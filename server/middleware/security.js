@@ -11,7 +11,7 @@ const helmetConfig = helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      scriptSrcAttr: ["'unsafe-hashes'"], // Разрешаем inline event handlers (onclick, onsubmit и т.д.)
+      scriptSrcAttr: ["'unsafe-inline'"], // Разрешаем inline event handlers (onclick, onsubmit и т.д.)
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
