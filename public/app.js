@@ -204,6 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
         passwordConfirmInput.addEventListener('input', validatePasswordInput);
     }
     
+    // Валидация пароля для восстановления
+    const resetPasswordNew = document.getElementById('resetPasswordNew');
+    const resetPasswordConfirm = document.getElementById('resetPasswordConfirm');
+    if (resetPasswordNew) {
+        resetPasswordNew.addEventListener('input', validateResetPasswordInput);
+    }
+    if (resetPasswordConfirm) {
+        resetPasswordConfirm.addEventListener('input', validateResetPasswordInput);
+    }
+    
     // Ограничение OTP поля только цифрами
     const otpInput = document.getElementById('registerOTP');
     if (otpInput) {
