@@ -8,6 +8,7 @@ const { auth, isPaid } = require('../middleware/auth');
 
 // Создание/обновление профиля водителя
 router.post('/profile', [auth, isPaid], [
+  body('phone').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат номера телефона'),
   body('licenseNumber').notEmpty().withMessage('Номер лицензии обязателен'),
   body('licenseExpiry').isISO8601().withMessage('Некорректная дата окончания лицензии'),
   body('vehicleType').isIn(['truck', 'van', 'trailer', 'container']).withMessage('Некорректный тип транспорта'),
@@ -23,18 +24,29 @@ router.post('/profile', [auth, isPaid], [
       return res.status(403).json({ message: 'Только водители могут создавать профиль' });
     }
 
+    // Обновляем телефон пользователя, если он указан
+    if (req.body.phone !== undefined) {
+      await User.update(
+        { phone: req.body.phone || null },
+        { where: { id: req.user.id } }
+      );
+    }
+
+    // Удаляем phone из req.body перед сохранением в Driver
+    const { phone, ...driverData } = req.body;
+
     let driver = await Driver.findOne({ where: { userId: req.user.id } });
 
     if (driver) {
       // Обновление существующего профиля
       await driver.update({
-        ...req.body,
+        ...driverData,
         isVerified: false // Сбрасываем верификацию при обновлении
       });
     } else {
       // Создание нового профиля
       driver = await Driver.create({
-        ...req.body,
+        ...driverData,
         userId: req.user.id
       });
     }

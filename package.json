@@ -9,7 +9,8 @@
     "create-admin": "node server/scripts/createAdmin.js",
     "create-mocks": "node server/scripts/createMocks.js",
     "test-setup": "node test-setup.js",
-    "migrate": "node server/scripts/migrateRemoveFirebase.js"
+    "migrate": "node server/scripts/migrateRemoveFirebase.js",
+    "migrate-phone": "node server/scripts/migrateAddPhone.js"
   },
   "keywords": [
     "logistics",

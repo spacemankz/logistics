@@ -5,9 +5,11 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const User = require('../models/User');
 const OTP = require('../models/OTP');
+const PasswordResetToken = require('../models/PasswordResetToken');
 const { auth } = require('../middleware/auth');
-const { sendOTP, isValidEmailDomain } = require('../services/email');
+const { sendOTP, sendPasswordResetLink, isValidEmailDomain } = require('../services/email');
 const { validatePassword } = require('../utils/passwordValidator');
+const crypto = require('crypto');
 
 // Генерация JWT токена
 const generateToken = (userId) => {
@@ -140,6 +142,7 @@ router.post('/verify-otp', [
 router.post('/register', [
   body('email').isEmail().withMessage('Некорректный email'),
   body('password').notEmpty().withMessage('Пароль обязателен'),
+  body('phone').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат номера телефона'),
   body('role').optional().isIn(['shipper', 'driver']).withMessage('Некорректная роль')
 ], async (req, res) => {
   try {
@@ -148,7 +151,7 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, role = 'shipper', profile } = req.body;
+    const { email, password, phone, role = 'shipper', profile } = req.body;
     const normalizedEmail = email.toLowerCase().trim();
 
     // Проверка существования пользователя
@@ -194,9 +197,9 @@ router.post('/register', [
     const user = await User.create({
       email: normalizedEmail,
       password,
+      phone: phone || null,
       role,
-      profile: profile || {},
-      authProvider: 'local'
+      profile: profile || {}
     });
 
     // Удаление использованного OTP
@@ -239,12 +242,6 @@ router.post('/login', [
       return res.status(401).json({ message: 'Неверный email или пароль' });
     }
 
-    // Проверяем, что пользователь использует локальную аутентификацию
-    // Если authProvider не установлен (старые пользователи), считаем его 'local'
-    if (user.authProvider && user.authProvider !== 'local') {
-      return res.status(401).json({ message: 'Этот аккаунт использует другой способ входа' });
-    }
-
     // Проверяем, что пароль установлен
     if (!user.password) {
       return res.status(401).json({ message: 'Пароль не установлен для этого аккаунта' });
@@ -273,10 +270,10 @@ router.post('/login', [
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         isPaid: user.isPaid,
-        profile: userProfile,
-        authProvider: user.authProvider || 'local'
+        profile: userProfile
       }
     });
   } catch (error) {
@@ -298,6 +295,123 @@ router.get('/me', auth, async (req, res) => {
     res.json({ user });
   } catch (error) {
     res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// Запрос на восстановление пароля
+router.post('/forgot-password', [
+  body('email').isEmail().withMessage('Некорректный email')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Ищем пользователя
+    const user = await User.findOne({ where: { email: normalizedEmail } });
+    
+    // Всегда возвращаем успех для безопасности (чтобы не раскрывать существование email)
+    if (!user) {
+      return res.json({ 
+        message: 'Если email существует в системе, на него будет отправлена ссылка для восстановления пароля' 
+      });
+    }
+
+    // Генерируем токен восстановления
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1); // Токен действителен 1 час
+
+    // Сохраняем токен в базе
+    await PasswordResetToken.create({
+      userId: user.id,
+      token: resetToken,
+      expiresAt,
+      used: false
+    });
+
+    // Формируем ссылку восстановления
+    const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${resetToken}`;
+
+    // Отправляем email
+    try {
+      await sendPasswordResetLink(normalizedEmail, resetLink);
+      res.json({ 
+        message: 'Если email существует в системе, на него будет отправлена ссылка для восстановления пароля' 
+      });
+    } catch (emailError) {
+      console.error('Ошибка отправки email:', emailError);
+      // Удаляем токен если не удалось отправить email
+      await PasswordResetToken.destroy({ where: { token: resetToken } });
+      res.status(500).json({ 
+        message: 'Не удалось отправить email. Попробуйте позже.' 
+      });
+    }
+  } catch (error) {
+    console.error('Ошибка запроса восстановления пароля:', error);
+    res.status(500).json({ message: 'Ошибка сервера' });
+  }
+});
+
+// Сброс пароля по токену
+router.post('/reset-password', [
+  body('token').notEmpty().withMessage('Токен обязателен'),
+  body('password').notEmpty().withMessage('Пароль обязателен')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { token, password } = req.body;
+
+    // Ищем токен
+    const resetToken = await PasswordResetToken.findOne({
+      where: { token },
+      include: [{ model: User }]
+    });
+
+    if (!resetToken) {
+      return res.status(400).json({ message: 'Неверный или истекший токен восстановления' });
+    }
+
+    // Проверяем, не использован ли токен
+    if (resetToken.used) {
+      return res.status(400).json({ message: 'Токен уже был использован' });
+    }
+
+    // Проверяем срок действия
+    if (new Date() > resetToken.expiresAt) {
+      return res.status(400).json({ message: 'Срок действия токена истек' });
+    }
+
+    // Проверка валидации пароля
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return res.status(400).json({ 
+        message: 'Пароль не соответствует требованиям безопасности',
+        errors: passwordValidation.errors
+      });
+    }
+
+    // Обновляем пароль пользователя
+    const user = resetToken.User;
+    user.password = password;
+    await user.save();
+
+    // Помечаем токен как использованный
+    resetToken.used = true;
+    await resetToken.save();
+
+    res.json({ message: 'Пароль успешно изменен' });
+  } catch (error) {
+    console.error('Ошибка сброса пароля:', error);
+    res.status(500).json({ message: 'Ошибка сервера при сбросе пароля' });
   }
 });
 

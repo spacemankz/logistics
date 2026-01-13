@@ -149,6 +149,17 @@ window.showPage = function(pageId) {
     if (pageId === 'myOrders' && typeof loadMyOrders === 'function') loadMyOrders();
     if (pageId === 'adminPanel' && typeof loadAdminPanel === 'function') loadAdminPanel();
     if (pageId === 'home' && typeof loadExchangeRates === 'function') loadExchangeRates();
+    if (pageId === 'reset-password') {
+        // Получаем токен из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        if (token) {
+            document.getElementById('resetPasswordToken').value = token;
+        } else {
+            showAlert('error', 'Токен восстановления не найден');
+            setTimeout(() => showPage('login'), 2000);
+        }
+    }
 };
 
 // Мобильное меню - переопределяем функцию, которая уже определена в HTML
@@ -555,12 +566,15 @@ async function handleRegister(e) {
     btn.disabled = true;
     btn.innerHTML = '<span class="loading"></span> Регистрация...';
     
+    const phone = document.getElementById('registerPhone')?.value.trim() || null;
+    
     try {
         const data = await apiRequest('/auth/register', {
             method: 'POST',
             body: JSON.stringify({
                 email: registerEmail,
                 password: password,
+                phone: phone,
                 role: registerRole
             })
         });
@@ -999,10 +1013,13 @@ async function handleSaveDriverProfile(e) {
     btn.disabled = true;
     btn.innerHTML = '<span class="loading"></span> Сохранение...';
     
+    const phone = document.getElementById('driverPhone')?.value.trim() || null;
+    
     try {
         await apiRequest('/driver/profile', {
             method: 'POST',
             body: JSON.stringify({
+                phone: phone,
                 licenseNumber: document.getElementById('driverLicense').value,
                 licenseExpiry: document.getElementById('driverLicenseExpiry').value,
                 vehicleType: document.getElementById('driverVehicleType').value,

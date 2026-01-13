@@ -1093,6 +1093,11 @@
                         <label>Пароль</label>
                         <input type="password" id="loginPassword" required placeholder="Введите пароль">
                     </div>
+                    <div style="text-align: right; margin-bottom: 16px;">
+                        <a href="#" onclick="showPage('forgot-password'); return false;" style="color: var(--primary); font-size: 14px; text-decoration: none;">
+                            Забыли пароль?
+                        </a>
+                    </div>
                     <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginBtn">
                         Войти
                     </button>
@@ -1132,6 +1137,13 @@
                             <input type="email" id="registerEmail" required placeholder="example@mail.kz">
                             <small style="color: var(--gray-600); margin-top: 4px; display: block;">
                                 На этот email будет отправлен код подтверждения
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label>Номер телефона (необязательно)</label>
+                            <input type="tel" id="registerPhone" placeholder="+77001234567" pattern="^\+?[1-9]\d{1,14}$">
+                            <small style="color: var(--gray-600); margin-top: 4px; display: block;">
+                                Формат: +77001234567
                             </small>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%;" id="sendOTPBtn">
@@ -1504,6 +1516,13 @@
                 <div id="driverError" class="alert alert-error hidden"></div>
                 <div id="driverSuccess" class="alert alert-success hidden"></div>
                 <form onsubmit="handleSaveDriverProfile(event)">
+                    <div class="form-group">
+                        <label>Номер телефона</label>
+                        <input type="tel" id="driverPhone" placeholder="+77001234567" pattern="^\+?[1-9]\d{1,14}$">
+                        <small style="color: var(--gray-600); margin-top: 4px; display: block;">
+                            Формат: +77001234567
+                        </small>
+                    </div>
                     <div class="form-group">
                         <label>Номер водительского удостоверения *</label>
                         <input type="text" id="driverLicense" required placeholder="AB1234567">

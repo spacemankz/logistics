@@ -3,6 +3,7 @@ const User = require('./User');
 const Cargo = require('./Cargo');
 const Driver = require('./Driver');
 const OTP = require('./OTP');
+const PasswordResetToken = require('./PasswordResetToken');
 
 // Определяем связи после загрузки всех моделей
 Cargo.belongsTo(User, { as: 'shipper', foreignKey: 'shipperId' });
@@ -40,12 +41,16 @@ const initDatabase = async () => {
   }
 };
 
+// Define associations
+PasswordResetToken.belongsTo(User, { foreignKey: 'userId', onDelete: 'CASCADE' });
+
 module.exports = {
   sequelize,
   User,
   Cargo,
   Driver,
   OTP,
+  PasswordResetToken,
   initDatabase
 };
 
