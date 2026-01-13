@@ -4,6 +4,7 @@ const { body, validationResult } = require('express-validator');
 const Cargo = require('../models/Cargo');
 const User = require('../models/User');
 const { auth, isPaid } = require('../middleware/auth');
+const { sanitizeString, sanitizeObject } = require('../utils/sanitize');
 
 // Создание груза
 router.post('/', [auth, isPaid], [

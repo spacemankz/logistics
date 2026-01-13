@@ -24,8 +24,8 @@ const generateOTP = () => {
 };
 
 // Отправка OTP кода на email
-router.post('/send-otp', [
-  body('email').isEmail().withMessage('Некорректный email')
+router.post('/send-otp', otpLimiter, [
+  body('email').isEmail().withMessage('Некорректный email').normalizeEmail()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -152,7 +152,13 @@ router.post('/register', [
     }
 
     const { email, password, phone, role = 'shipper', profile } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = sanitizeEmail(email);
+    const sanitizedPhone = phone ? sanitizePhone(phone) : null;
+    const sanitizedProfile = profile ? sanitizeObject(profile) : {};
+    
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'Некорректный email' });
+    }
 
     // Проверка существования пользователя
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
@@ -197,9 +203,9 @@ router.post('/register', [
     const user = await User.create({
       email: normalizedEmail,
       password,
-      phone: phone || null,
+      phone: sanitizedPhone,
       role,
-      profile: profile || {}
+      profile: sanitizedProfile
     });
 
     // Удаление использованного OTP
@@ -224,8 +230,8 @@ router.post('/register', [
 });
 
 // Авторизация
-router.post('/login', [
-  body('email').isEmail().withMessage('Некорректный email'),
+router.post('/login', authLimiter, [
+  body('email').isEmail().withMessage('Некорректный email').normalizeEmail(),
   body('password').notEmpty().withMessage('Пароль обязателен')
 ], async (req, res) => {
   try {
@@ -235,7 +241,11 @@ router.post('/login', [
     }
 
     const { email, password } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = sanitizeEmail(email);
+    
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'Некорректный email' });
+    }
 
     const user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
@@ -299,8 +309,8 @@ router.get('/me', auth, async (req, res) => {
 });
 
 // Запрос на восстановление пароля
-router.post('/forgot-password', [
-  body('email').isEmail().withMessage('Некорректный email')
+router.post('/forgot-password', passwordResetLimiter, [
+  body('email').isEmail().withMessage('Некорректный email').normalizeEmail()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

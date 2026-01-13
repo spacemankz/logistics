@@ -13,9 +13,23 @@ const createAdmin = async () => {
     const existingAdmin = await User.findOne({ where: { email: adminEmail } });
     
     if (existingAdmin) {
-      console.log('Администратор уже существует');
-      process.exit(0);
-      return;
+      if (existingAdmin.role === 'admin') {
+        console.log('Администратор уже существует:');
+        console.log(`Email: ${adminEmail}`);
+        console.log(`Role: ${existingAdmin.role}`);
+        console.log(`ID: ${existingAdmin.id}`);
+        console.log('\nЕсли хотите обновить пароль, удалите существующего администратора или измените пароль вручную.');
+        process.exit(0);
+        return;
+      } else {
+        // Обновляем роль существующего пользователя на admin
+        await existingAdmin.update({ role: 'admin', isPaid: true });
+        console.log('Роль пользователя обновлена на администратора:');
+        console.log(`Email: ${adminEmail}`);
+        console.log(`Password: ${adminPassword}`);
+        process.exit(0);
+        return;
+      }
     }
 
     const admin = await User.create({

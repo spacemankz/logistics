@@ -26,14 +26,23 @@ router.post('/profile', [auth, isPaid], [
 
     // Обновляем телефон пользователя, если он указан
     if (req.body.phone !== undefined) {
+      const sanitizedPhone = req.body.phone ? sanitizePhone(req.body.phone) : null;
       await User.update(
-        { phone: req.body.phone || null },
+        { phone: sanitizedPhone },
         { where: { id: req.user.id } }
       );
     }
 
     // Удаляем phone из req.body перед сохранением в Driver
     const { phone, ...driverData } = req.body;
+    
+    // Санитизация данных водителя
+    if (driverData.licenseNumber) {
+      driverData.licenseNumber = sanitizeString(driverData.licenseNumber);
+    }
+    if (driverData.vehicleNumber) {
+      driverData.vehicleNumber = sanitizeString(driverData.vehicleNumber);
+    }
 
     let driver = await Driver.findOne({ where: { userId: req.user.id } });
 
