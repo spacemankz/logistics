@@ -150,14 +150,20 @@ window.showPage = function(pageId) {
     if (pageId === 'adminPanel' && typeof loadAdminPanel === 'function') loadAdminPanel();
     if (pageId === 'home' && typeof loadExchangeRates === 'function') loadExchangeRates();
     if (pageId === 'reset-password') {
-        // Получаем токен из URL
+        // Получаем токен из URL (если еще не установлен)
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        if (token) {
-            document.getElementById('resetPasswordToken').value = token;
-        } else {
-            showAlert('error', 'Токен восстановления не найден');
-            setTimeout(() => showPage('login'), 2000);
+        const tokenInput = document.getElementById('resetPasswordToken');
+        if (token && tokenInput) {
+            tokenInput.value = token;
+        } else if (!token) {
+            // Если токена нет, показываем ошибку и перенаправляем на вход
+            const errorDiv = document.getElementById('resetPasswordError');
+            if (errorDiv) {
+                errorDiv.textContent = 'Токен восстановления не найден или истек. Пожалуйста, запросите новую ссылку.';
+                errorDiv.classList.remove('hidden');
+            }
+            setTimeout(() => showPage('login'), 3000);
         }
     }
 };
