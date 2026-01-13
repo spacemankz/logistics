@@ -34,7 +34,11 @@ router.post('/send-otp', otpLimiter, [
     }
 
     const { email } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = sanitizeEmail(email);
+    
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'Некорректный email' });
+    }
 
     // Проверка существования пользователя
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
@@ -103,7 +107,11 @@ router.post('/verify-otp', [
     }
 
     const { email, code } = req.body;
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = sanitizeEmail(email);
+    
+    if (!normalizedEmail) {
+      return res.status(400).json({ message: 'Некорректный email' });
+    }
 
     // Поиск OTP
     const otpRecord = await OTP.findOne({
