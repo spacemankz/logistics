@@ -1211,6 +1211,75 @@
             </div>
         </div>
 
+        <!-- Forgot Password Page -->
+        <div id="forgot-password" class="page">
+            <div class="card" style="max-width: 500px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Восстановление пароля</h2>
+                </div>
+                <div id="forgotPasswordError" class="alert alert-error hidden"></div>
+                <div id="forgotPasswordSuccess" class="alert alert-success hidden"></div>
+                <form onsubmit="handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="forgotPasswordEmail" required placeholder="example@mail.kz">
+                        <small style="color: var(--gray-600); margin-top: 4px; display: block;">
+                            На этот email будет отправлена ссылка для восстановления пароля
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="forgotPasswordBtn">
+                        Отправить ссылку
+                    </button>
+                </form>
+                <p style="margin-top: 20px; text-align: center; color: var(--gray-600);">
+                    <a href="#" onclick="showPage('login'); return false;" style="color: var(--primary); font-weight: 500;">
+                        <i class="fas fa-arrow-left"></i> Вернуться к входу
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Reset Password Page -->
+        <div id="reset-password" class="page">
+            <div class="card" style="max-width: 500px; margin: 40px auto;">
+                <div class="card-header">
+                    <h2>Сброс пароля</h2>
+                </div>
+                <div id="resetPasswordError" class="alert alert-error hidden"></div>
+                <div id="resetPasswordSuccess" class="alert alert-success hidden"></div>
+                <form onsubmit="handleResetPassword(event)">
+                    <input type="hidden" id="resetPasswordToken">
+                    <div class="form-group">
+                        <label>Новый пароль</label>
+                        <input type="password" id="resetPasswordNew" required placeholder="Введите новый пароль">
+                        <div id="resetPasswordRequirements" style="margin-top: 8px; padding: 12px; background: var(--gray-50); border-radius: var(--radius); font-size: 13px;">
+                            <strong style="display: block; margin-bottom: 6px;">Требования к паролю:</strong>
+                            <div id="resetPasswordReqMin" style="color: var(--gray-500);"><i class="fas fa-times"></i> Минимум 8 символов</div>
+                            <div id="resetPasswordReqUpper" style="color: var(--gray-500);"><i class="fas fa-times"></i> Заглавная буква</div>
+                            <div id="resetPasswordReqLower" style="color: var(--gray-500);"><i class="fas fa-times"></i> Строчная буква</div>
+                            <div id="resetPasswordReqNumber" style="color: var(--gray-500);"><i class="fas fa-times"></i> Цифра</div>
+                            <div id="resetPasswordReqSpecial" style="color: var(--gray-500);"><i class="fas fa-times"></i> Специальный символ (!@#$%^&*)</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Подтвердите пароль</label>
+                        <input type="password" id="resetPasswordConfirm" required placeholder="Повторите пароль">
+                        <div id="resetPasswordMatch" style="margin-top: 4px; font-size: 13px; display: none;">
+                            <span id="resetPasswordMatchText"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" id="resetPasswordBtn">
+                        Изменить пароль
+                    </button>
+                </form>
+                <p style="margin-top: 20px; text-align: center; color: var(--gray-600);">
+                    <a href="#" onclick="showPage('login'); return false;" style="color: var(--primary); font-weight: 500;">
+                        <i class="fas fa-arrow-left"></i> Вернуться к входу
+                    </a>
+                </p>
+            </div>
+        </div>
+
         <!-- Dashboard Page -->
         <div id="dashboard" class="page">
             <div class="card">
