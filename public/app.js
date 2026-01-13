@@ -17,71 +17,69 @@ let exchangeRatesCache = {};
 
 async function loadExchangeRates() {
     try {
-        // Пробуем сначала загрузить с Национального банка РК (официальный источник)
-        await loadExchangeRatesFromNBK();
-    } catch (error) {
-        console.error('Ошибка загрузки курсов с НБ РК, пробуем альтернативный источник:', error);
+        // Используем серверный endpoint для обхода CORS
+        const response = await fetch('/api/exchange/rates');
         
-        // Альтернативный источник: exchangerate-api.com
-        try {
-            const response = await fetch('https://api.exchangerate-api.com/v4/latest/KZT');
-            
-            if (!response.ok) {
-                throw new Error('Не удалось загрузить курсы валют');
-            }
-            
-            const data = await response.json();
-            
-            // Конвертируем из KZT в другие валюты (инвертируем)
-            const usdRate = (1 / data.rates.USD).toFixed(2);
-            const eurRate = (1 / data.rates.EUR).toFixed(2);
-            const rubRate = (1 / data.rates.RUB).toFixed(2);
-            const cnyRate = (1 / data.rates.CNY).toFixed(2);
-            
-            // Обновляем отображение
-            const usdElement = document.getElementById('usdRate');
-            const eurElement = document.getElementById('eurRate');
-            const rubElement = document.getElementById('rubRate');
-            const cnyElement = document.getElementById('cnyRate');
-            
-            if (usdElement) {
-                const oldUsd = exchangeRatesCache.USD;
-                usdElement.textContent = usdRate;
-                updateRateChange('usdChange', oldUsd, usdRate);
-                exchangeRatesCache.USD = usdRate;
-            }
-            
-            if (eurElement) {
-                const oldEur = exchangeRatesCache.EUR;
-                eurElement.textContent = eurRate;
-                updateRateChange('eurChange', oldEur, eurRate);
-                exchangeRatesCache.EUR = eurRate;
-            }
-            
-            if (rubElement) {
-                const oldRub = exchangeRatesCache.RUB;
-                rubElement.textContent = rubRate;
-                updateRateChange('rubChange', oldRub, rubRate);
-                exchangeRatesCache.RUB = rubRate;
-            }
-            
-            if (cnyElement) {
-                const oldCny = exchangeRatesCache.CNY;
-                cnyElement.textContent = cnyRate;
-                updateRateChange('cnyChange', oldCny, cnyRate);
-                exchangeRatesCache.CNY = cnyRate;
-            }
-            
-            // Обновляем время последнего обновления
-            const updateTimeElement = document.getElementById('exchangeRatesUpdateTime');
-            if (updateTimeElement) {
-                const now = new Date();
-                updateTimeElement.textContent = `Обновлено: ${now.toLocaleTimeString('ru-RU')}`;
-            }
-        } catch (altError) {
-            console.error('Ошибка загрузки с альтернативного источника:', altError);
-            showExchangeRatesError();
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить курсы валют');
         }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.rates) {
+            throw new Error('Неверный формат данных');
+        }
+        
+        const rates = data.rates;
+        
+        // Обновляем отображение
+        const usdElement = document.getElementById('usdRate');
+        const eurElement = document.getElementById('eurRate');
+        const rubElement = document.getElementById('rubRate');
+        const cnyElement = document.getElementById('cnyRate');
+        
+        if (usdElement && rates.USD) {
+            const oldUsd = exchangeRatesCache.USD;
+            const usdRate = rates.USD.toFixed(2);
+            usdElement.textContent = usdRate;
+            updateRateChange('usdChange', oldUsd, usdRate);
+            exchangeRatesCache.USD = usdRate;
+        }
+        
+        if (eurElement && rates.EUR) {
+            const oldEur = exchangeRatesCache.EUR;
+            const eurRate = rates.EUR.toFixed(2);
+            eurElement.textContent = eurRate;
+            updateRateChange('eurChange', oldEur, eurRate);
+            exchangeRatesCache.EUR = eurRate;
+        }
+        
+        if (rubElement && rates.RUB) {
+            const oldRub = exchangeRatesCache.RUB;
+            const rubRate = rates.RUB.toFixed(2);
+            rubElement.textContent = rubRate;
+            updateRateChange('rubChange', oldRub, rubRate);
+            exchangeRatesCache.RUB = rubRate;
+        }
+        
+        if (cnyElement && rates.CNY) {
+            const oldCny = exchangeRatesCache.CNY;
+            const cnyRate = rates.CNY.toFixed(2);
+            cnyElement.textContent = cnyRate;
+            updateRateChange('cnyChange', oldCny, cnyRate);
+            exchangeRatesCache.CNY = cnyRate;
+        }
+        
+        // Обновляем время последнего обновления
+        const updateTimeElement = document.getElementById('exchangeRatesUpdateTime');
+        if (updateTimeElement) {
+            const now = new Date();
+            updateTimeElement.textContent = `Обновлено: ${now.toLocaleTimeString('ru-RU')} (${data.source})`;
+        }
+        
+    } catch (error) {
+        console.error('Ошибка загрузки курсов валют:', error);
+        showExchangeRatesError();
     }
 }
 

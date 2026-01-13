@@ -17,6 +17,7 @@ app.use('/api/cargo', require('./routes/cargo'));
 app.use('/api/driver', require('./routes/driver'));
 app.use('/api/payment', require('./routes/payment'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/exchange', require('./routes/exchange'));
 
 // Статические файлы
 app.use(express.static(path.join(__dirname, '../public')));
