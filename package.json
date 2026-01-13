@@ -10,7 +10,8 @@
     "create-mocks": "node server/scripts/createMocks.js",
     "test-setup": "node test-setup.js",
     "migrate": "node server/scripts/migrateRemoveFirebase.js",
-    "migrate-phone": "node server/scripts/migrateAddPhone.js"
+    "migrate-phone": "node server/scripts/migrateAddPhone.js",
+    "migrate-phone2": "node server/scripts/migrateAddPhone2.js"
   },
   "keywords": [
     "logistics",

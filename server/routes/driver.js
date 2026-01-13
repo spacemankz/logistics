@@ -9,6 +9,7 @@ const { auth, isPaid } = require('../middleware/auth');
 // Создание/обновление профиля водителя
 router.post('/profile', [auth, isPaid], [
   body('phone').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат номера телефона'),
+  body('phone2').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат второго номера телефона'),
   body('licenseNumber').notEmpty().withMessage('Номер лицензии обязателен'),
   body('licenseExpiry').isISO8601().withMessage('Некорректная дата окончания лицензии'),
   body('vehicleType').isIn(['truck', 'van', 'trailer', 'container']).withMessage('Некорректный тип транспорта'),
@@ -24,17 +25,23 @@ router.post('/profile', [auth, isPaid], [
       return res.status(403).json({ message: 'Только водители могут создавать профиль' });
     }
 
-    // Обновляем телефон пользователя, если он указан
+    const { sanitizePhone } = require('../utils/sanitize');
+    
+    // Обновляем телефоны пользователя, если они указаны
+    const updateData = {};
     if (req.body.phone !== undefined) {
-      const sanitizedPhone = req.body.phone ? sanitizePhone(req.body.phone) : null;
-      await User.update(
-        { phone: sanitizedPhone },
-        { where: { id: req.user.id } }
-      );
+      updateData.phone = req.body.phone ? sanitizePhone(req.body.phone) : null;
+    }
+    if (req.body.phone2 !== undefined) {
+      updateData.phone2 = req.body.phone2 ? sanitizePhone(req.body.phone2) : null;
+    }
+    
+    if (Object.keys(updateData).length > 0) {
+      await User.update(updateData, { where: { id: req.user.id } });
     }
 
-    // Удаляем phone из req.body перед сохранением в Driver
-    const { phone, ...driverData } = req.body;
+    // Удаляем phone и phone2 из req.body перед сохранением в Driver
+    const { phone, phone2, ...driverData } = req.body;
     
     // Санитизация данных водителя
     if (driverData.licenseNumber) {
@@ -62,7 +69,7 @@ router.post('/profile', [auth, isPaid], [
 
     await driver.reload({
       include: [
-        { model: User, as: 'user', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'user', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ]
     });
 
@@ -83,7 +90,7 @@ router.get('/profile', auth, isPaid, async (req, res) => {
     const driver = await Driver.findOne({
       where: { userId: req.user.id },
       include: [
-        { model: User, as: 'user', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'user', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ]
     });
 

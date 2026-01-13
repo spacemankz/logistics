@@ -153,6 +153,7 @@ router.post('/register', [
   body('email').isEmail().withMessage('Некорректный email'),
   body('password').notEmpty().withMessage('Пароль обязателен'),
   body('phone').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат номера телефона'),
+  body('phone2').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат второго номера телефона'),
   body('role').optional().isIn(['shipper', 'driver']).withMessage('Некорректная роль')
 ], async (req, res) => {
   try {
@@ -161,9 +162,10 @@ router.post('/register', [
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, phone, role = 'shipper', profile } = req.body;
+    const { email, password, phone, phone2, role = 'shipper', profile } = req.body;
     const normalizedEmail = sanitizeEmail(email);
     const sanitizedPhone = phone ? sanitizePhone(phone) : null;
+    const sanitizedPhone2 = phone2 ? sanitizePhone(phone2) : null;
     const sanitizedProfile = profile ? sanitizeObject(profile) : {};
     
     if (!normalizedEmail) {
@@ -214,6 +216,7 @@ router.post('/register', [
       email: normalizedEmail,
       password,
       phone: sanitizedPhone,
+      phone2: sanitizedPhone2,
       role,
       profile: sanitizedProfile
     });
@@ -229,6 +232,8 @@ router.post('/register', [
       user: {
         id: user.id,
         email: user.email,
+        phone: user.phone,
+        phone2: user.phone2,
         role: user.role,
         isPaid: user.isPaid
       }
@@ -291,6 +296,7 @@ router.post('/login', authLimiter, [
         id: user.id,
         email: user.email,
         phone: user.phone,
+        phone2: user.phone2,
         role: user.role,
         isPaid: user.isPaid,
         profile: userProfile
@@ -432,6 +438,50 @@ router.post('/reset-password', [
   } catch (error) {
     console.error('Ошибка сброса пароля:', error);
     res.status(500).json({ message: 'Ошибка сервера при сбросе пароля' });
+  }
+});
+
+// Обновление профиля пользователя
+router.put('/update-profile', auth, [
+  body('phone').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат номера телефона'),
+  body('phone2').optional().matches(/^\+?[1-9]\d{1,14}$/).withMessage('Некорректный формат второго номера телефона')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { phone, phone2 } = req.body;
+    const updateData = {};
+    
+    if (phone !== undefined) {
+      updateData.phone = phone ? sanitizePhone(phone) : null;
+    }
+    if (phone2 !== undefined) {
+      updateData.phone2 = phone2 ? sanitizePhone(phone2) : null;
+    }
+
+    await User.update(updateData, { where: { id: req.user.id } });
+    
+    const user = await User.findByPk(req.user.id, {
+      attributes: { exclude: ['password'] }
+    });
+
+    res.json({
+      message: 'Профиль успешно обновлен',
+      user: {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        phone2: user.phone2,
+        role: user.role,
+        isPaid: user.isPaid
+      }
+    });
+  } catch (error) {
+    console.error('Ошибка обновления профиля:', error);
+    res.status(500).json({ message: 'Ошибка сервера при обновлении профиля' });
   }
 });
 

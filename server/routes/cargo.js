@@ -73,7 +73,7 @@ router.get('/my', auth, isPaid, async (req, res) => {
     const cargos = await Cargo.findAll({
       where: { shipperId: req.user.id },
       include: [
-        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -90,7 +90,7 @@ router.get('/available', auth, isPaid, async (req, res) => {
     const cargos = await Cargo.findAll({
       where: { status: 'pending' },
       include: [
-        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -106,8 +106,8 @@ router.get('/:id', auth, isPaid, async (req, res) => {
   try {
     const cargo = await Cargo.findByPk(req.params.id, {
       include: [
-        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] },
-        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] },
+        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ]
     });
     

@@ -143,12 +143,13 @@ window.showPage = function(pageId) {
     }
     
     // Загрузка данных для страниц
-    if (pageId === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
-    if (pageId === 'cargoList' && typeof loadCargoList === 'function') loadCargoList();
-    if (pageId === 'availableCargos' && typeof loadAvailableCargos === 'function') loadAvailableCargos();
-    if (pageId === 'myOrders' && typeof loadMyOrders === 'function') loadMyOrders();
-    if (pageId === 'adminPanel' && typeof loadAdminPanel === 'function') loadAdminPanel();
-    if (pageId === 'home' && typeof loadExchangeRates === 'function') loadExchangeRates();
+        if (pageId === 'dashboard' && typeof loadDashboard === 'function') loadDashboard();
+        if (pageId === 'cargoList' && typeof loadCargoList === 'function') loadCargoList();
+        if (pageId === 'availableCargos' && typeof loadAvailableCargos === 'function') loadAvailableCargos();
+        if (pageId === 'myOrders' && typeof loadMyOrders === 'function') loadMyOrders();
+        if (pageId === 'adminPanel' && typeof loadAdminPanel === 'function') loadAdminPanel();
+        if (pageId === 'home' && typeof loadExchangeRates === 'function') loadExchangeRates();
+        if (pageId === 'userProfile' && typeof loadUserProfile === 'function') loadUserProfile();
     if (pageId === 'reset-password') {
         // Получаем токен из URL (если еще не установлен)
         const urlParams = new URLSearchParams(window.location.search);
@@ -284,9 +285,11 @@ function updateNavbar() {
             ${currentUser.role === 'shipper' ? `
                 <a href="#" onclick="showPage('cargoForm'); return false;"><i class="fas fa-box"></i> Создать груз</a>
                 <a href="#" onclick="showPage('cargoList'); return false;"><i class="fas fa-list"></i> Мои грузы</a>
+                <a href="#" onclick="showPage('userProfile'); return false;"><i class="fas fa-user-edit"></i> Мой профиль</a>
             ` : ''}
             ${currentUser.role === 'driver' ? `
-                <a href="#" onclick="showPage('driverProfile'); return false;"><i class="fas fa-user"></i> Профиль</a>
+                <a href="#" onclick="showPage('driverProfile'); return false;"><i class="fas fa-user"></i> Профиль водителя</a>
+                <a href="#" onclick="showPage('userProfile'); return false;"><i class="fas fa-user-edit"></i> Мой профиль</a>
                 <a href="#" onclick="showPage('availableCargos'); return false;"><i class="fas fa-search"></i> Доступные</a>
                 <a href="#" onclick="showPage('myOrders'); return false;"><i class="fas fa-list"></i> Мои заказы</a>
             ` : ''}
@@ -605,6 +608,7 @@ async function handleRegister(e) {
                 email: registerEmail,
                 password: password,
                 phone: phone,
+                phone2: document.getElementById('registerPhone2')?.value.trim() || null,
                 role: registerRole
             })
         });
@@ -953,12 +957,18 @@ function renderCargoList(cargos) {
                             <strong>Email:</strong>
                             <span>${cargo.assignedDriver.email}</span>
                         </div>
-                        ${cargo.assignedDriver.profile?.phone ? `
-                        <div class="contact-item">
-                            <strong>Телефон:</strong>
-                            <a href="tel:${cargo.assignedDriver.profile.phone}" style="color: white; text-decoration: underline;">
-                                ${cargo.assignedDriver.profile.phone}
+                        ${cargo.assignedDriver.phone || cargo.assignedDriver.phone2 ? `
+                        <div style="margin-top: 12px; display: flex; gap: 8px;">
+                            ${cargo.assignedDriver.phone ? `
+                            <a href="tel:${cargo.assignedDriver.phone}" class="btn btn-primary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fas fa-phone"></i> Позвонить
                             </a>
+                            ` : ''}
+                            ${cargo.assignedDriver.phone2 ? `
+                            <a href="tel:${cargo.assignedDriver.phone2}" class="btn btn-secondary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fas fa-phone-alt"></i> Второй номер
+                            </a>
+                            ` : ''}
                         </div>
                         ` : ''}
                         ${cargo.assignedDriver.profile?.firstName || cargo.assignedDriver.profile?.lastName ? `
@@ -1008,6 +1018,10 @@ async function loadDashboard() {
                     <i class="fas fa-list" style="font-size: 32px;"></i>
                     <span>Мои грузы</span>
                 </button>
+                <button class="btn btn-info" onclick="showPage('userProfile')" style="padding: 24px; flex-direction: column; gap: 12px;">
+                    <i class="fas fa-user-edit" style="font-size: 32px;"></i>
+                    <span>Мой профиль</span>
+                </button>
             </div>
         `;
     } else if (currentUser.role === 'driver') {
@@ -1015,6 +1029,10 @@ async function loadDashboard() {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 24px;">
                 <button class="btn btn-primary" onclick="showPage('driverProfile')" style="padding: 24px; flex-direction: column; gap: 12px;">
                     <i class="fas fa-user" style="font-size: 32px;"></i>
+                    <span>Профиль водителя</span>
+                </button>
+                <button class="btn btn-info" onclick="showPage('userProfile')" style="padding: 24px; flex-direction: column; gap: 12px;">
+                    <i class="fas fa-user-edit" style="font-size: 32px;"></i>
                     <span>Мой профиль</span>
                 </button>
                 <button class="btn btn-secondary" onclick="showPage('availableCargos')" style="padding: 24px; flex-direction: column; gap: 12px;">
@@ -1044,12 +1062,14 @@ async function handleSaveDriverProfile(e) {
     btn.innerHTML = '<span class="loading"></span> Сохранение...';
     
     const phone = document.getElementById('driverPhone')?.value.trim() || null;
+    const phone2 = document.getElementById('driverPhone2')?.value.trim() || null;
     
     try {
         await apiRequest('/driver/profile', {
             method: 'POST',
             body: JSON.stringify({
                 phone: phone,
+                phone2: phone2,
                 licenseNumber: document.getElementById('driverLicense').value,
                 licenseExpiry: document.getElementById('driverLicenseExpiry').value,
                 vehicleType: document.getElementById('driverVehicleType').value,
@@ -1067,6 +1087,60 @@ async function handleSaveDriverProfile(e) {
     } finally {
         btn.disabled = false;
         btn.textContent = 'Сохранить профиль';
+    }
+}
+
+// Загрузка профиля пользователя
+async function loadUserProfile() {
+    if (!currentUser) return;
+    
+    const emailInput = document.getElementById('userProfileEmail');
+    const phoneInput = document.getElementById('userProfilePhone');
+    const phone2Input = document.getElementById('userProfilePhone2');
+    
+    if (emailInput) emailInput.value = currentUser.email || '';
+    if (phoneInput) phoneInput.value = currentUser.phone || '';
+    if (phone2Input) phone2Input.value = currentUser.phone2 || '';
+}
+
+// Сохранение профиля пользователя
+async function handleSaveUserProfile(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('userProfileError');
+    const successDiv = document.getElementById('userProfileSuccess');
+    const btn = document.getElementById('saveUserProfileBtn');
+    
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Сохранение...';
+    
+    const phone = document.getElementById('userProfilePhone')?.value.trim() || null;
+    const phone2 = document.getElementById('userProfilePhone2')?.value.trim() || null;
+    
+    try {
+        const data = await apiRequest('/auth/update-profile', {
+            method: 'PUT',
+            body: JSON.stringify({
+                phone: phone,
+                phone2: phone2
+            })
+        });
+        
+        // Обновляем текущего пользователя
+        currentUser.phone = data.user.phone;
+        currentUser.phone2 = data.user.phone2;
+        
+        successDiv.innerHTML = '<strong><i class="fas fa-check-circle"></i> Профиль успешно обновлен!</strong>';
+        successDiv.classList.remove('hidden');
+        errorDiv.classList.add('hidden');
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Ошибка сохранения профиля';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сохранить изменения';
     }
 }
 
@@ -1233,6 +1307,21 @@ function renderAvailableCargos(cargos) {
                 <div style="margin-top: 16px; padding: 12px; background: var(--gray-100); border-radius: var(--radius);">
                     <strong style="color: var(--gray-700); font-size: 13px;"><i class="fas fa-envelope"></i> Грузоотправитель:</strong>
                     <span style="margin-left: 8px;">${cargo.shipper.email}</span>
+                </div>
+                ` : ''}
+                
+                ${cargo.shipper && (cargo.shipper.phone || cargo.shipper.phone2) ? `
+                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                    ${cargo.shipper.phone ? `
+                    <a href="tel:${cargo.shipper.phone}" class="btn btn-primary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-phone"></i> Позвонить
+                    </a>
+                    ` : ''}
+                    ${cargo.shipper.phone2 ? `
+                    <a href="tel:${cargo.shipper.phone2}" class="btn btn-secondary" style="flex: 1; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-phone-alt"></i> Второй номер
+                    </a>
+                    ` : ''}
                 </div>
                 ` : ''}
                 
@@ -2105,6 +2194,8 @@ window.handleLogout = handleLogout;
 window.handleActivate = handleActivate;
 window.handleCreateCargo = handleCreateCargo;
 window.handleSaveDriverProfile = handleSaveDriverProfile;
+window.handleSaveUserProfile = handleSaveUserProfile;
+window.loadUserProfile = loadUserProfile;
 window.handleForgotPassword = handleForgotPassword;
 window.handleResetPassword = handleResetPassword;
 window.acceptOrder = acceptOrder;
