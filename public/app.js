@@ -180,6 +180,20 @@ window.toggleMobileMenu = function(event) {
 
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
+    // Проверяем URL на наличие токена восстановления пароля
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetToken = urlParams.get('token');
+    
+    if (resetToken) {
+        // Если есть токен в URL, показываем страницу восстановления пароля
+        showPage('reset-password');
+        const tokenInput = document.getElementById('resetPasswordToken');
+        if (tokenInput) {
+            tokenInput.value = resetToken;
+        }
+        return; // Не продолжаем обычную инициализацию
+    }
+    
     if (token) {
         checkAuth();
     } else {
