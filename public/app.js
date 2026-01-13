@@ -1896,6 +1896,174 @@ async function rejectDriver(driverId) {
     }
 }
 
+// Восстановление пароля
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('forgotPasswordError');
+    const successDiv = document.getElementById('forgotPasswordSuccess');
+    const btn = document.getElementById('forgotPasswordBtn');
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    const email = document.getElementById('forgotPasswordEmail').value.toLowerCase().trim();
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Отправка...';
+    
+    try {
+        await apiRequest('/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email })
+        });
+        
+        successDiv.textContent = 'Если email существует в системе, на него будет отправлена ссылка для восстановления пароля. Проверьте почту.';
+        successDiv.classList.remove('hidden');
+        document.getElementById('forgotPasswordEmail').value = '';
+    } catch (error) {
+        errorDiv.textContent = error.message || 'Ошибка отправки запроса';
+        errorDiv.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить ссылку';
+    }
+}
+
+// Сброс пароля
+async function handleResetPassword(e) {
+    e.preventDefault();
+    const errorDiv = document.getElementById('resetPasswordError');
+    const successDiv = document.getElementById('resetPasswordSuccess');
+    const btn = document.getElementById('resetPasswordBtn');
+    errorDiv.classList.add('hidden');
+    successDiv.classList.add('hidden');
+    
+    const token = document.getElementById('resetPasswordToken').value;
+    const password = document.getElementById('resetPasswordNew').value;
+    const passwordConfirm = document.getElementById('resetPasswordConfirm').value;
+    
+    if (password !== passwordConfirm) {
+        errorDiv.textContent = 'Пароли не совпадают';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+    
+    // Проверка требований к паролю
+    const requirements = {
+        min: password.length >= 8,
+        upper: /[A-ZА-Я]/.test(password),
+        lower: /[a-zа-я]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    
+    if (!Object.values(requirements).every(req => req === true)) {
+        errorDiv.textContent = 'Пароль не соответствует требованиям безопасности';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading"></span> Изменение...';
+    
+    try {
+        await apiRequest('/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, password })
+        });
+        
+        successDiv.textContent = 'Пароль успешно изменен! Вы будете перенаправлены на страницу входа.';
+        successDiv.classList.remove('hidden');
+        
+        setTimeout(() => {
+            showPage('login');
+        }, 2000);
+    } catch (error) {
+        if (error.errors && Array.isArray(error.errors)) {
+            errorDiv.textContent = error.errors.join(', ');
+        } else {
+            errorDiv.textContent = error.message || 'Ошибка сброса пароля';
+        }
+        errorDiv.classList.remove('hidden');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Изменить пароль';
+    }
+}
+
+// Валидация пароля для восстановления
+function validateResetPasswordInput() {
+    const password = document.getElementById('resetPasswordNew').value;
+    const passwordConfirm = document.getElementById('resetPasswordConfirm').value;
+    const matchDiv = document.getElementById('resetPasswordMatch');
+    const matchText = document.getElementById('resetPasswordMatchText');
+    
+    // Проверка требований
+    const requirements = {
+        min: password.length >= 8,
+        upper: /[A-ZА-Я]/.test(password),
+        lower: /[a-zа-я]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+    
+    const reqElements = {
+        min: document.getElementById('resetPasswordReqMin'),
+        upper: document.getElementById('resetPasswordReqUpper'),
+        lower: document.getElementById('resetPasswordReqLower'),
+        number: document.getElementById('resetPasswordReqNumber'),
+        special: document.getElementById('resetPasswordReqSpecial')
+    };
+    
+    if (reqElements.min) {
+        reqElements.min.innerHTML = requirements.min 
+            ? '<i class="fas fa-check"></i> Минимум 8 символов'
+            : '<i class="fas fa-times"></i> Минимум 8 символов';
+        reqElements.min.style.color = requirements.min ? 'var(--success)' : 'var(--gray-500)';
+    }
+    
+    if (reqElements.upper) {
+        reqElements.upper.innerHTML = requirements.upper 
+            ? '<i class="fas fa-check"></i> Заглавная буква'
+            : '<i class="fas fa-times"></i> Заглавная буква';
+        reqElements.upper.style.color = requirements.upper ? 'var(--success)' : 'var(--gray-500)';
+    }
+    
+    if (reqElements.lower) {
+        reqElements.lower.innerHTML = requirements.lower 
+            ? '<i class="fas fa-check"></i> Строчная буква'
+            : '<i class="fas fa-times"></i> Строчная буква';
+        reqElements.lower.style.color = requirements.lower ? 'var(--success)' : 'var(--gray-500)';
+    }
+    
+    if (reqElements.number) {
+        reqElements.number.innerHTML = requirements.number 
+            ? '<i class="fas fa-check"></i> Цифра'
+            : '<i class="fas fa-times"></i> Цифра';
+        reqElements.number.style.color = requirements.number ? 'var(--success)' : 'var(--gray-500)';
+    }
+    
+    if (reqElements.special) {
+        reqElements.special.innerHTML = requirements.special 
+            ? '<i class="fas fa-check"></i> Специальный символ (!@#$%^&*)'
+            : '<i class="fas fa-times"></i> Специальный символ (!@#$%^&*)';
+        reqElements.special.style.color = requirements.special ? 'var(--success)' : 'var(--gray-500)';
+    }
+    
+    // Проверка совпадения паролей
+    if (passwordConfirm.length > 0) {
+        matchDiv.style.display = 'block';
+        if (password === passwordConfirm) {
+            matchText.innerHTML = '<i class="fas fa-check" style="color: var(--success);"></i> Пароли совпадают';
+            matchText.style.color = 'var(--success)';
+        } else {
+            matchText.innerHTML = '<i class="fas fa-times" style="color: var(--error);"></i> Пароли не совпадают';
+            matchText.style.color = 'var(--error)';
+        }
+    } else {
+        matchDiv.style.display = 'none';
+    }
+}
+
 // Экспортируем все функции в window для использования в onclick
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
@@ -1907,6 +2075,8 @@ window.handleLogout = handleLogout;
 window.handleActivate = handleActivate;
 window.handleCreateCargo = handleCreateCargo;
 window.handleSaveDriverProfile = handleSaveDriverProfile;
+window.handleForgotPassword = handleForgotPassword;
+window.handleResetPassword = handleResetPassword;
 window.acceptOrder = acceptOrder;
 window.verifyDriver = verifyDriver;
 window.rejectDriver = rejectDriver;
