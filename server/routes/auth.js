@@ -9,6 +9,8 @@ const PasswordResetToken = require('../models/PasswordResetToken');
 const { auth } = require('../middleware/auth');
 const { sendOTP, sendPasswordResetLink, isValidEmailDomain } = require('../services/email');
 const { validatePassword } = require('../utils/passwordValidator');
+const { sanitizeEmail, sanitizePhone, sanitizeObject } = require('../utils/sanitize');
+const { authLimiter, otpLimiter, passwordResetLimiter } = require('../middleware/security');
 const crypto = require('crypto');
 
 // Генерация JWT токена
