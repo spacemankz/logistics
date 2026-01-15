@@ -25,7 +25,7 @@ router.post('/profile', [auth, isPaid], [
       return res.status(403).json({ message: 'Только водители могут создавать профиль' });
     }
 
-    const { sanitizePhone } = require('../utils/sanitize');
+    const { sanitizePhone, sanitizeString } = require('../utils/sanitize');
     
     // Обновляем телефоны пользователя, если они указаны
     const updateData = {};
@@ -50,20 +50,64 @@ router.post('/profile', [auth, isPaid], [
     if (driverData.vehicleNumber) {
       driverData.vehicleNumber = sanitizeString(driverData.vehicleNumber);
     }
+    
+    // Преобразуем licenseExpiry в Date, если это строка
+    if (driverData.licenseExpiry) {
+      if (typeof driverData.licenseExpiry === 'string') {
+        const expiryDate = new Date(driverData.licenseExpiry);
+        if (isNaN(expiryDate.getTime())) {
+          return res.status(400).json({ message: 'Некорректная дата окончания лицензии' });
+        }
+        driverData.licenseExpiry = expiryDate;
+      }
+    } else {
+      return res.status(400).json({ message: 'Дата окончания лицензии обязательна' });
+    }
+
+    // Проверяем наличие всех обязательных полей
+    if (!driverData.licenseNumber) {
+      return res.status(400).json({ message: 'Номер лицензии обязателен' });
+    }
+    if (!driverData.vehicleType) {
+      return res.status(400).json({ message: 'Тип транспорта обязателен' });
+    }
+    if (!driverData.vehicleNumber) {
+      return res.status(400).json({ message: 'Номер транспорта обязателен' });
+    }
 
     let driver = await Driver.findOne({ where: { userId: req.user.id } });
 
     if (driver) {
       // Обновление существующего профиля
-      await driver.update({
-        ...driverData,
+      // Обновляем только переданные поля
+      const updateFields = {
+        licenseNumber: driverData.licenseNumber,
+        licenseExpiry: driverData.licenseExpiry,
+        vehicleType: driverData.vehicleType,
+        vehicleNumber: driverData.vehicleNumber,
         isVerified: false // Сбрасываем верификацию при обновлении
-      });
+      };
+      
+      // Обновляем vehicleCapacity и documents только если они переданы
+      if (driverData.vehicleCapacity !== undefined) {
+        updateFields.vehicleCapacity = driverData.vehicleCapacity;
+      }
+      if (driverData.documents !== undefined) {
+        updateFields.documents = driverData.documents;
+      }
+      
+      await driver.update(updateFields);
     } else {
       // Создание нового профиля
       driver = await Driver.create({
-        ...driverData,
-        userId: req.user.id
+        licenseNumber: driverData.licenseNumber,
+        licenseExpiry: driverData.licenseExpiry,
+        vehicleType: driverData.vehicleType,
+        vehicleNumber: driverData.vehicleNumber,
+        vehicleCapacity: driverData.vehicleCapacity || {},
+        documents: driverData.documents || {},
+        userId: req.user.id,
+        isVerified: false
       });
     }
 
@@ -75,8 +119,11 @@ router.post('/profile', [auth, isPaid], [
 
     res.json({ driver });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Ошибка создания профиля водителя' });
+    console.error('Ошибка создания профиля водителя:', error);
+    res.status(500).json({ 
+      message: 'Ошибка создания профиля водителя',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
@@ -139,7 +186,10 @@ router.post('/accept-order/:cargoId', auth, isPaid, async (req, res) => {
 
     const driver = await Driver.findOne({ where: { userId: req.user.id } });
     if (!driver) {
-      return res.status(404).json({ message: 'Профиль водителя не найден' });
+      return res.status(404).json({ 
+        message: 'Профиль водителя не найден. Пожалуйста, создайте профиль водителя перед принятием заказов.',
+        code: 'DRIVER_PROFILE_NOT_FOUND'
+      });
     }
 
     if (!driver.isVerified) {
@@ -163,13 +213,14 @@ router.post('/accept-order/:cargoId', auth, isPaid, async (req, res) => {
     // Загружаем полную информацию о грузе с данными грузоотправителя
     await cargo.reload({
       include: [
-        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ]
     });
 
     res.json({ message: 'Заказ принят', cargo });
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка принятия заказа' });
+    console.error('Ошибка принятия заказа:', error);
+    res.status(500).json({ message: 'Ошибка принятия заказа', error: error.message });
   }
 });
 

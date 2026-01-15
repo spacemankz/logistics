@@ -1343,9 +1343,16 @@ async function acceptOrder(cargoId) {
             method: 'POST'
         });
         
-        // Получаем полную информацию о грузе с контактами грузоотправителя
-        const cargoData = await apiRequest(`/cargo/${cargoId}`);
-        const cargo = cargoData.cargo;
+        // Используем данные из ответа API, если они есть, иначе получаем отдельно
+        let cargo = data.cargo;
+        if (!cargo) {
+            const cargoData = await apiRequest(`/cargo/${cargoId}`);
+            cargo = cargoData.cargo;
+        }
+        
+        if (!cargo || !cargo.shipper) {
+            throw new Error('Не удалось получить информацию о грузе');
+        }
         
         // Показываем контактную информацию
         const contactInfo = `
@@ -1354,15 +1361,23 @@ async function acceptOrder(cargoId) {
                 <div class="contact-info">
                     <div class="contact-item">
                         <strong><i class="fas fa-envelope"></i> Email:</strong>
-                        <a href="mailto:${cargo.shipper.email}" style="color: white; text-decoration: underline;">
-                            ${cargo.shipper.email}
+                        <a href="mailto:${cargo.shipper.email || ''}" style="color: white; text-decoration: underline;">
+                            ${cargo.shipper.email || 'Не указан'}
                         </a>
                     </div>
-                    ${cargo.shipper.profile?.phone ? `
+                    ${cargo.shipper.phone ? `
                     <div class="contact-item">
                         <strong><i class="fas fa-phone"></i> Телефон:</strong>
-                        <a href="tel:${cargo.shipper.profile.phone}" style="color: white; text-decoration: underline;">
-                            ${cargo.shipper.profile.phone}
+                        <a href="tel:${cargo.shipper.phone}" style="color: white; text-decoration: underline;">
+                            ${cargo.shipper.phone}
+                        </a>
+                    </div>
+                    ` : ''}
+                    ${cargo.shipper.phone2 ? `
+                    <div class="contact-item">
+                        <strong><i class="fas fa-phone"></i> Телефон 2:</strong>
+                        <a href="tel:${cargo.shipper.phone2}" style="color: white; text-decoration: underline;">
+                            ${cargo.shipper.phone2}
                         </a>
                     </div>
                     ` : ''}
@@ -1442,7 +1457,27 @@ async function acceptOrder(cargoId) {
         };
         document.addEventListener('keydown', handleEscape);
     } catch (error) {
-        alert('Ошибка: ' + error.message);
+        console.error('Ошибка при принятии заказа:', error);
+        const errorMessage = error.message || 'Произошла ошибка при принятии заказа';
+        
+        // Специальная обработка для отсутствующего профиля водителя
+        if (errorMessage.includes('Профиль водителя не найден')) {
+            const shouldGoToProfile = confirm(
+                'Для принятия заказов необходимо создать профиль водителя.\n\n' +
+                'Нажмите "OK" чтобы перейти на страницу создания профиля.'
+            );
+            if (shouldGoToProfile) {
+                showPage('driverProfile');
+                return;
+            }
+        } else {
+            alert('Ошибка: ' + errorMessage);
+        }
+        
+        // Обновляем список доступных грузов в случае ошибки
+        setTimeout(() => {
+            loadAvailableCargos();
+        }, 100);
     }
 }
 
