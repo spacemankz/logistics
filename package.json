@@ -11,7 +11,8 @@
     "test-setup": "node test-setup.js",
     "migrate": "node server/scripts/migrateRemoveFirebase.js",
     "migrate-phone": "node server/scripts/migrateAddPhone.js",
-    "migrate-phone2": "node server/scripts/migrateAddPhone2.js"
+    "migrate-phone2": "node server/scripts/migrateAddPhone2.js",
+    "clear-users": "node server/scripts/clearUsers.js"
   },
   "keywords": [
     "logistics",
