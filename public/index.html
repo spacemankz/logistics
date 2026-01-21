@@ -515,6 +515,118 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gray-500);
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--gray-100);
+            color: var(--gray-900);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        /* Rating Stars */
+        .rating-input {
+            display: flex;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .rating-input .star {
+            font-size: 32px;
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .rating-input .star:hover,
+        .rating-input .star.active {
+            color: var(--warning);
+        }
+
+        .rating-display {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .rating-display .star {
+            font-size: 16px;
+            color: var(--warning);
+        }
+
+        .rating-display .star.empty {
+            color: var(--gray-300);
+        }
         
         .filter-actions {
             display: flex;
@@ -1068,6 +1180,76 @@
                     <p style="color: var(--gray-600); margin-top: 8px; margin-bottom: 0;">Свяжитесь с нами через WhatsApp для получения консультации</p>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 24px;">
+                    <a href="https://wa.me/77066298949?text=Здравствуйте! Меня интересует услуга: ЗЕЛЕНЫЙ ЧИП (XITOY YASHIL CHIP Green card)" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
+                        <div style="display: flex; align-items: start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">🟩 ЗЕЛЕНЫЙ ЧИП (🇨🇳XITOY YASHIL CHIP Green card)</h3>
+                                <p style="color: var(--gray-600); font-size: 14px; margin: 0; line-height: 1.5;">
+                                    • Приглашение НА ВСЕ ТАМОЖНЯ<br>
+                                    • Зеленый чип на 1 год❗️🇨🇳<br>
+                                    • Проверка срока карты🇨🇳 БЕСПЛАТНО<br>
+                                    • Продление⏳ • Утеря🛑<br>
+                                    ➕ ДОБАВЛЕНИЕ ГРАНИЦ 20.000 Тг
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="https://wa.me/77066298949?text=Здравствуйте! Меня интересует услуга: Регистрация (СПЕЦ) КРУПНОГАБАРИТНЫХ и ОПАСНЫХ ГРУЗ" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
+                        <div style="display: flex; align-items: start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">🔅Регистрация (СПЕЦ) КРУПНОГАБАРИТНЫХ и ОПАСНЫХ ГРУЗ</h3>
+                                <p style="color: var(--gray-600); font-size: 14px; margin: 0; line-height: 1.5;">
+                                    Постановка на баланс и выдача катов (Постановка на баланс бесплатно если делаете через нас)<br>
+                                    📄 Таможенное свидетельство<br>
+                                    📝 Страховка по низкой цене 33 000тг<br>
+                                    💡 Консультация — Бесплатно 24/7<br>
+                                    ✨ Почему именно мы?<br>
+                                    ✔️ Самые оптимальные цены<br>
+                                    ✔️ Работаем быстро и надёжно
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="https://wa.me/77077197192?text=Здравствуйте! Меня интересует услуга: ПОЛУЧЕНИЕ СПЕЦИАЛЬНОГО РАЗРЕШЕНИЯ НА ДВИЖЕНИЕ ПО АВТОМОБИЛЬНЫМ ДОРОГАМ ТЯЖЕЛОВЕСНОГО И КРУПНОГАБАРИТНОГО ТРАНСПОРТНОГО СРЕДСТВА" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
+                        <div style="display: flex; align-items: start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">ПОЛУЧЕНИЕ СПЕЦИАЛЬНОГО РАЗРЕШЕНИЯ НА ДВИЖЕНИЕ ПО АВТОМОБИЛЬНЫМ ДОРОГАМ ТЯЖЕЛОВЕСНОГО И КРУПНОГАБАРИТНОГО ТРАНСПОРТНОГО СРЕДСТВА</h3>
+                                <p style="color: var(--gray-600); font-size: 14px; margin: 0; line-height: 1.5;">
+                                    КАЗАХСТАН🇰🇿 • РОССИЯ 🇷🇺 • БЕЛАРУСЬ 🇧🇾<br>
+                                    УЗБЕКИСТАН 🇺🇿 • КЫРГЫЗСТАН 🇰🇬<br>
+                                    ТУРКМЕНИСТАН 🇹🇲 • ТУРЦИЯ 🇹🇷<br>
+                                    📲 +7 707 719 71 92
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="https://wa.me/77077197192?text=Здравствуйте! Меня интересует услуга: ОКАЗАНИЕ УСЛУГ АВТОМОБИЛЯ ПРИКРЫТИЯ ДЛЯ СОПРОВОЖДЕНИЯ НЕГАБАРИТНОГО И КРУПНОТОННАЖНОГО ГРУЗА" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
+                        <div style="display: flex; align-items: start; gap: 16px;">
+                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">ОКАЗАНИЕ УСЛУГ АВТОМОБИЛЯ ПРИКРЫТИЯ ДЛЯ СОПРОВОЖДЕНИЯ НЕГАБАРИТНОГО И КРУПНОТОННАЖНОГО ГРУЗА</h3>
+                                <p style="color: var(--gray-600); font-size: 14px; margin: 0; line-height: 1.5;">
+                                    Сопровождение негабаритных и крупнотоннажных грузов<br>
+                                    📲 +7 707 719 71 92
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+
                     <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: Приглашение" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
                         <div style="display: flex; align-items: start; gap: 16px;">
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -1080,30 +1262,6 @@
                         </div>
                     </a>
 
-                    <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: Зеленая карта (GreenCard)" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
-                        <div style="display: flex; align-items: start; gap: 16px;">
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
-                            </div>
-                            <div style="flex: 1;">
-                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">Зеленая карта (GreenCard)</h3>
-                                <p style="color: var(--gray-600); font-size: 14px; margin: 0;">Оформление международной страховки для автотранспорта</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: Сопровождение по миру" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
-                        <div style="display: flex; align-items: start; gap: 16px;">
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
-                            </div>
-                            <div style="flex: 1;">
-                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">Сопровождение по миру</h3>
-                                <p style="color: var(--gray-600); font-size: 14px; margin: 0;">Организация сопровождения грузов в международных перевозках</p>
-                            </div>
-                        </div>
-                    </a>
-
                     <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: Оформление (Брокерские услуги)" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
                         <div style="display: flex; align-items: start; gap: 16px;">
                             <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -1112,30 +1270,6 @@
                             <div style="flex: 1;">
                                 <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">Оформление (Брокерские услуги)</h3>
                                 <p style="color: var(--gray-600); font-size: 14px; margin: 0;">Таможенное оформление и брокерские услуги</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: Спецразрешение" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--success);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
-                        <div style="display: flex; align-items: start; gap: 16px;">
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
-                            </div>
-                            <div style="flex: 1;">
-                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">Спецразрешение</h3>
-                                <p style="color: var(--gray-600); font-size: 14px; margin: 0;">Оформление специальных разрешений на перевозку</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    <a href="https://wa.me/77025491868?text=Здравствуйте! Меня интересует услуга: АДР - опасные грузы" target="_blank" class="card" style="text-decoration: none; cursor: pointer; transition: all 0.3s; border-left: 4px solid var(--danger);" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='var(--shadow-lg)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow)'">
-                        <div style="display: flex; align-items: start; gap: 16px;">
-                            <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                <i class="fab fa-whatsapp" style="color: white; font-size: 24px;"></i>
-                            </div>
-                            <div style="flex: 1;">
-                                <h3 style="color: var(--gray-900); margin-bottom: 8px; font-size: 18px;">АДР - опасные грузы</h3>
-                                <p style="color: var(--gray-600); font-size: 14px; margin: 0;">Оформление документов для перевозки опасных грузов</p>
                             </div>
                         </div>
                     </a>
@@ -1561,12 +1695,16 @@
                 </div>
                 <div class="filters">
                     <div class="filters-header">
-                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры и поиск</h3>
                         <div class="filter-actions">
                             <button class="btn btn-secondary btn-sm" onclick="clearCargoFilters()">Сбросить</button>
                         </div>
                     </div>
                     <div class="filters-content">
+                        <div class="filter-group" style="grid-column: 1 / -1;">
+                            <label>Поиск по названию/описанию</label>
+                            <input type="text" id="cargoSearchFilter" placeholder="Введите текст для поиска..." oninput="filterCargos()">
+                        </div>
                         <div class="filter-group">
                             <label>Статус</label>
                             <select id="cargoStatusFilter" onchange="filterCargos()">
@@ -1598,6 +1736,43 @@
                         <div class="filter-group">
                             <label>Город доставки</label>
                             <input type="text" id="cargoDeliveryCityFilter" placeholder="Любой город" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Мин. цена (₸)</label>
+                            <input type="number" id="cargoMinPriceFilter" placeholder="0" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Макс. цена (₸)</label>
+                            <input type="number" id="cargoMaxPriceFilter" placeholder="Без ограничений" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Мин. вес (кг)</label>
+                            <input type="number" id="cargoMinWeightFilter" placeholder="0" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Макс. вес (кг)</label>
+                            <input type="number" id="cargoMaxWeightFilter" placeholder="Без ограничений" oninput="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата от</label>
+                            <input type="date" id="cargoDateFromFilter" onchange="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата до</label>
+                            <input type="date" id="cargoDateToFilter" onchange="filterCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Сортировка</label>
+                            <select id="cargoSortFilter" onchange="filterCargos()">
+                                <option value="date_desc">Дата (новые сначала)</option>
+                                <option value="date_asc">Дата (старые сначала)</option>
+                                <option value="price_desc">Цена (по убыванию)</option>
+                                <option value="price_asc">Цена (по возрастанию)</option>
+                                <option value="distance_desc">Расстояние (по убыванию)</option>
+                                <option value="distance_asc">Расстояние (по возрастанию)</option>
+                                <option value="weight_desc">Вес (по убыванию)</option>
+                                <option value="weight_asc">Вес (по возрастанию)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1655,6 +1830,39 @@
                         <div class="filter-group">
                             <label>Макс. стоимость (₸)</label>
                             <input type="number" id="availableMaxPriceFilter" placeholder="Без ограничений" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Мин. вес (кг)</label>
+                            <input type="number" id="availableMinWeightFilter" placeholder="0" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Макс. вес (кг)</label>
+                            <input type="number" id="availableMaxWeightFilter" placeholder="Без ограничений" oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата от</label>
+                            <input type="date" id="availableDateFromFilter" onchange="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Дата до</label>
+                            <input type="date" id="availableDateToFilter" onchange="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group" style="grid-column: 1 / -1;">
+                            <label>Поиск по названию/описанию</label>
+                            <input type="text" id="availableSearchFilter" placeholder="Введите текст для поиска..." oninput="filterAvailableCargos()">
+                        </div>
+                        <div class="filter-group">
+                            <label>Сортировка</label>
+                            <select id="availableSortFilter" onchange="filterAvailableCargos()">
+                                <option value="date_desc">Дата (новые сначала)</option>
+                                <option value="date_asc">Дата (старые сначала)</option>
+                                <option value="price_desc">Цена (по убыванию)</option>
+                                <option value="price_asc">Цена (по возрастанию)</option>
+                                <option value="distance_desc">Расстояние (по убыванию)</option>
+                                <option value="distance_asc">Расстояние (по возрастанию)</option>
+                                <option value="weight_desc">Вес (по убыванию)</option>
+                                <option value="weight_asc">Вес (по возрастанию)</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -1881,6 +2089,104 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- History Cargos Page (for shippers) -->
+        <div id="historyCargos" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> История грузов</h2>
+                </div>
+                <div id="historyCargosStats" style="margin-bottom: 24px;"></div>
+                <div class="filters">
+                    <div class="filters-header">
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearHistoryCargosFilters()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label>Статус</label>
+                            <select id="historyCargosStatusFilter" onchange="filterHistoryCargos()">
+                                <option value="">Все статусы</option>
+                                <option value="pending">Ожидает</option>
+                                <option value="assigned">Назначен</option>
+                                <option value="in_transit">В пути</option>
+                                <option value="delivered">Доставлен</option>
+                                <option value="cancelled">Отменен</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="historyCargosContent"></div>
+            </div>
+        </div>
+
+        <!-- History Orders Page (for drivers) -->
+        <div id="historyOrders" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-history"></i> История заказов</h2>
+                </div>
+                <div id="historyOrdersStats" style="margin-bottom: 24px;"></div>
+                <div class="filters">
+                    <div class="filters-header">
+                        <h3 style="margin: 0; font-size: 16px;">Фильтры</h3>
+                        <div class="filter-actions">
+                            <button class="btn btn-secondary btn-sm" onclick="clearHistoryOrdersFilters()">Сбросить</button>
+                        </div>
+                    </div>
+                    <div class="filters-content">
+                        <div class="filter-group">
+                            <label>Статус</label>
+                            <select id="historyOrdersStatusFilter" onchange="filterHistoryOrders()">
+                                <option value="">Все статусы</option>
+                                <option value="assigned">Назначен</option>
+                                <option value="in_transit">В пути</option>
+                                <option value="delivered">Доставлен</option>
+                                <option value="cancelled">Отменен</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="historyOrdersContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="modal" style="display: none;" onclick="if(event.target === this) closeReviewModal();">
+        <div class="modal-content" style="max-width: 500px;" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <h3>Оставить отзыв</h3>
+                <button class="modal-close" onclick="closeReviewModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="reviewForm" onsubmit="submitReview(event)">
+                    <input type="hidden" id="reviewCargoId">
+                    <input type="hidden" id="reviewToUserId">
+                    <div class="form-group">
+                        <label>Оценка *</label>
+                        <div class="rating-input" id="ratingInput">
+                            <span class="star" data-rating="1" onclick="setRating(1)">☆</span>
+                            <span class="star" data-rating="2" onclick="setRating(2)">☆</span>
+                            <span class="star" data-rating="3" onclick="setRating(3)">☆</span>
+                            <span class="star" data-rating="4" onclick="setRating(4)">☆</span>
+                            <span class="star" data-rating="5" onclick="setRating(5)">☆</span>
+                        </div>
+                        <input type="hidden" id="reviewRating" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Комментарий</label>
+                        <textarea id="reviewComment" rows="4" placeholder="Оставьте ваш отзыв..."></textarea>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">Отправить</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeReviewModal()" style="flex: 1;">Отмена</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

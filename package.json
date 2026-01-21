@@ -12,7 +12,9 @@
     "migrate": "node server/scripts/migrateRemoveFirebase.js",
     "migrate-phone": "node server/scripts/migrateAddPhone.js",
     "migrate-phone2": "node server/scripts/migrateAddPhone2.js",
-    "clear-users": "node server/scripts/clearUsers.js"
+    "migrate-reviews": "node server/scripts/migrateAddReviews.js",
+    "clear-users": "node server/scripts/clearUsers.js",
+    "test:e2e": "node test/e2e/full-flow.test.js"
   },
   "keywords": [
     "logistics",
@@ -38,6 +40,7 @@
     "validator": "^13.15.26"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "puppeteer": "^21.0.0"
   }
 }

@@ -166,7 +166,7 @@ router.get('/orders', auth, isPaid, async (req, res) => {
     const orders = await Cargo.findAll({
       where: { assignedDriverId: req.user.id },
       include: [
-        { model: User, as: 'shipper', attributes: ['id', 'email', 'profile'] }
+        { model: User, as: 'shipper', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ],
       order: [['createdAt', 'DESC']]
     });

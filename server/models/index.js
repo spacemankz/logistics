@@ -4,6 +4,7 @@ const Cargo = require('./Cargo');
 const Driver = require('./Driver');
 const OTP = require('./OTP');
 const PasswordResetToken = require('./PasswordResetToken');
+const Review = require('./Review');
 
 // Определяем связи после загрузки всех моделей
 Cargo.belongsTo(User, { as: 'shipper', foreignKey: 'shipperId' });
@@ -11,6 +12,11 @@ Cargo.belongsTo(User, { as: 'assignedDriver', foreignKey: 'assignedDriverId' });
 
 Driver.belongsTo(User, { as: 'user', foreignKey: 'userId' });
 Driver.belongsTo(User, { as: 'verifiedBy', foreignKey: 'verifiedById' });
+
+// Связи для Review
+Review.belongsTo(Cargo, { foreignKey: 'cargoId' });
+Review.belongsTo(User, { as: 'fromUser', foreignKey: 'fromUserId' });
+Review.belongsTo(User, { as: 'toUser', foreignKey: 'toUserId' });
 
 // Инициализация базы данных
 const initDatabase = async () => {
@@ -51,6 +57,7 @@ module.exports = {
   Driver,
   OTP,
   PasswordResetToken,
+  Review,
   initDatabase
 };
 

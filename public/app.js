@@ -150,6 +150,8 @@ window.showPage = function(pageId) {
         if (pageId === 'adminPanel' && typeof loadAdminPanel === 'function') loadAdminPanel();
         if (pageId === 'home' && typeof loadExchangeRates === 'function') loadExchangeRates();
         if (pageId === 'userProfile' && typeof loadUserProfile === 'function') loadUserProfile();
+        if (pageId === 'historyCargos' && typeof loadHistoryCargos === 'function') loadHistoryCargos();
+        if (pageId === 'historyOrders' && typeof loadHistoryOrders === 'function') loadHistoryOrders();
     if (pageId === 'reset-password') {
         // Получаем токен из URL (если еще не установлен)
         const urlParams = new URLSearchParams(window.location.search);
@@ -281,24 +283,53 @@ function updateNavbar() {
     const mobileMenu = document.getElementById('mobileMenu');
     
     if (currentUser) {
-        const menuItems = `
-            ${currentUser.role === 'shipper' ? `
-                <a href="#" onclick="showPage('cargoForm'); return false;"><i class="fas fa-box"></i> Создать груз</a>
-                <a href="#" onclick="showPage('cargoList'); return false;"><i class="fas fa-list"></i> Мои грузы</a>
+        let menuItems = '';
+        
+        if (currentUser.role === 'shipper') {
+            // Группа "Грузы"
+            menuItems += `
+                <div class="nav-group" style="display: flex; align-items: center; gap: 8px; position: relative;">
+                    <a href="#" onclick="showPage('cargoForm'); return false;"><i class="fas fa-box"></i> Создать груз</a>
+                    <a href="#" onclick="showPage('cargoList'); return false;"><i class="fas fa-list"></i> Мои грузы</a>
+                    <a href="#" onclick="showPage('historyCargos'); return false;"><i class="fas fa-history"></i> История</a>
+                </div>
+                <span class="nav-separator" style="width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 8px;"></span>
+            `;
+            // Группа "Профиль"
+            menuItems += `
                 <a href="#" onclick="showPage('userProfile'); return false;"><i class="fas fa-user-edit"></i> Мой профиль</a>
-            ` : ''}
-            ${currentUser.role === 'driver' ? `
+            `;
+        } else if (currentUser.role === 'driver') {
+            // Группа "Заказы"
+            menuItems += `
+                <div class="nav-group" style="display: flex; align-items: center; gap: 8px; position: relative;">
+                    <a href="#" onclick="showPage('availableCargos'); return false;"><i class="fas fa-search"></i> Доступные</a>
+                    <a href="#" onclick="showPage('myOrders'); return false;"><i class="fas fa-list"></i> Мои заказы</a>
+                    <a href="#" onclick="showPage('historyOrders'); return false;"><i class="fas fa-history"></i> История</a>
+                </div>
+                <span class="nav-separator" style="width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 8px;"></span>
+            `;
+            // Группа "Профиль"
+            menuItems += `
                 <a href="#" onclick="showPage('driverProfile'); return false;"><i class="fas fa-user"></i> Профиль водителя</a>
                 <a href="#" onclick="showPage('userProfile'); return false;"><i class="fas fa-user-edit"></i> Мой профиль</a>
-                <a href="#" onclick="showPage('availableCargos'); return false;"><i class="fas fa-search"></i> Доступные</a>
-                <a href="#" onclick="showPage('myOrders'); return false;"><i class="fas fa-list"></i> Мои заказы</a>
-            ` : ''}
-            ${currentUser.role === 'admin' ? `
+            `;
+        } else if (currentUser.role === 'admin') {
+            menuItems += `
                 <a href="#" onclick="showPage('adminPanel'); return false;"><i class="fas fa-cog"></i> Админ-панель</a>
-            ` : ''}
-            ${!currentUser.isPaid ? `
+            `;
+        }
+        
+        // Общие элементы
+        if (!currentUser.isPaid) {
+            menuItems += `
+                <span class="nav-separator" style="width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 8px;"></span>
                 <a href="#" onclick="showPage('payment'); return false;"><i class="fas fa-credit-card"></i> Активировать</a>
-            ` : ''}
+            `;
+        }
+        
+        menuItems += `
+            <span class="nav-separator" style="width: 1px; height: 24px; background: rgba(255,255,255,0.3); margin: 0 8px;"></span>
             <span class="user-badge" style="margin: 0 12px;">${currentUser.email}</span>
             <button onclick="handleLogout(); return false;">Выход</button>
         `;
@@ -799,21 +830,8 @@ async function handleCreateCargo(e) {
 
 // Фильтрация грузов
 function filterCargos() {
-    const statusFilter = document.getElementById('cargoStatusFilter').value.toLowerCase();
-    const typeFilter = document.getElementById('cargoTypeFilter').value.toLowerCase();
-    const pickupCityFilter = document.getElementById('cargoPickupCityFilter').value.toLowerCase();
-    const deliveryCityFilter = document.getElementById('cargoDeliveryCityFilter').value.toLowerCase();
-    
-    const filtered = allCargos.filter(cargo => {
-        const matchStatus = !statusFilter || cargo.status.toLowerCase() === statusFilter;
-        const matchType = !typeFilter || cargo.cargoType.toLowerCase() === typeFilter;
-        const matchPickup = !pickupCityFilter || (cargo.pickupLocation?.city || '').toLowerCase().includes(pickupCityFilter);
-        const matchDelivery = !deliveryCityFilter || (cargo.deliveryLocation?.city || '').toLowerCase().includes(deliveryCityFilter);
-        
-        return matchStatus && matchType && matchPickup && matchDelivery;
-    });
-    
-    renderCargoList(filtered);
+    // Перезагружаем с фильтрами через API
+    loadCargoList();
 }
 
 // Очистка фильтров грузов
@@ -822,6 +840,14 @@ function clearCargoFilters() {
     document.getElementById('cargoTypeFilter').value = '';
     document.getElementById('cargoPickupCityFilter').value = '';
     document.getElementById('cargoDeliveryCityFilter').value = '';
+    document.getElementById('cargoMinPriceFilter').value = '';
+    document.getElementById('cargoMaxPriceFilter').value = '';
+    document.getElementById('cargoMinWeightFilter').value = '';
+    document.getElementById('cargoMaxWeightFilter').value = '';
+    document.getElementById('cargoDateFromFilter').value = '';
+    document.getElementById('cargoDateToFilter').value = '';
+    document.getElementById('cargoSearchFilter').value = '';
+    document.getElementById('cargoSortFilter').value = 'date_desc';
     filterCargos();
 }
 
@@ -957,6 +983,12 @@ function renderCargoList(cargos) {
                             <strong>Email:</strong>
                             <span>${cargo.assignedDriver.email}</span>
                         </div>
+                        ${cargo.driverRating !== undefined ? `
+                        <div class="contact-item" style="margin-top: 8px;">
+                            <strong>Рейтинг:</strong>
+                            <span>${renderRating(cargo.driverRating)}</span>
+                        </div>
+                        ` : ''}
                         ${cargo.assignedDriver.phone || cargo.assignedDriver.phone2 ? `
                         <div style="margin-top: 12px; display: flex; gap: 8px;">
                             ${cargo.assignedDriver.phone ? `
@@ -977,6 +1009,12 @@ function renderCargoList(cargos) {
                             <span>${cargo.assignedDriver.profile.firstName || ''} ${cargo.assignedDriver.profile.lastName || ''}</span>
                         </div>
                         ` : ''}
+                        ${cargo.status === 'delivered' ? `
+                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" 
+                                onclick="showReviewForm(${cargo.id}, ${cargo.assignedDriver.id})">
+                            <i class="fas fa-star"></i> Оставить отзыв
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
                 ` : ''}
@@ -988,9 +1026,11 @@ function renderCargoList(cargos) {
 // Загрузка списка грузов
 async function loadCargoList() {
     try {
-        const data = await apiRequest('/cargo/my');
+        const query = buildFilterQuery();
+        const url = query ? `/cargo/my?${query}` : '/cargo/my';
+        const data = await apiRequest(url);
         allCargos = data.cargos;
-        filterCargos();
+        renderCargoList(allCargos);
     } catch (error) {
         const content = document.getElementById('cargoListContent');
         if (content) {
@@ -1146,51 +1186,35 @@ async function handleSaveUserProfile(e) {
 
 // Фильтрация доступных грузов
 function filterAvailableCargos() {
-    const pickupCityFilter = document.getElementById('availablePickupCityFilter')?.value.toLowerCase() || '';
-    const deliveryCityFilter = document.getElementById('availableDeliveryCityFilter')?.value.toLowerCase() || '';
-    const cargoTypeFilter = document.getElementById('availableCargoTypeFilter')?.value.toLowerCase() || '';
-    const vehicleTypeFilter = document.getElementById('availableVehicleTypeFilter')?.value.toLowerCase() || '';
-    const minPrice = parseFloat(document.getElementById('availableMinPriceFilter')?.value) || 0;
-    const maxPrice = parseFloat(document.getElementById('availableMaxPriceFilter')?.value) || Infinity;
-    
-    const filtered = allAvailableCargos.filter(cargo => {
-        const matchPickup = !pickupCityFilter || (cargo.pickupLocation?.city || '').toLowerCase().includes(pickupCityFilter);
-        const matchDelivery = !deliveryCityFilter || (cargo.deliveryLocation?.city || '').toLowerCase().includes(deliveryCityFilter);
-        const matchCargoType = !cargoTypeFilter || cargo.cargoType.toLowerCase() === cargoTypeFilter;
-        const matchVehicleType = !vehicleTypeFilter || cargo.vehicleType.toLowerCase() === vehicleTypeFilter;
-        const matchPrice = cargo.totalPrice >= minPrice && cargo.totalPrice <= maxPrice;
-        
-        return matchPickup && matchDelivery && matchCargoType && matchVehicleType && matchPrice;
-    });
-    
-    renderAvailableCargos(filtered);
+    // Перезагружаем с фильтрами через API
+    loadAvailableCargos();
 }
 
 // Очистка фильтров доступных грузов
 function clearAvailableFilters() {
-    const pickupFilter = document.getElementById('availablePickupCityFilter');
-    const deliveryFilter = document.getElementById('availableDeliveryCityFilter');
-    const cargoTypeFilter = document.getElementById('availableCargoTypeFilter');
-    const vehicleTypeFilter = document.getElementById('availableVehicleTypeFilter');
-    const minPriceFilter = document.getElementById('availableMinPriceFilter');
-    const maxPriceFilter = document.getElementById('availableMaxPriceFilter');
-    
-    if (pickupFilter) pickupFilter.value = '';
-    if (deliveryFilter) deliveryFilter.value = '';
-    if (cargoTypeFilter) cargoTypeFilter.value = '';
-    if (vehicleTypeFilter) vehicleTypeFilter.value = '';
-    if (minPriceFilter) minPriceFilter.value = '';
-    if (maxPriceFilter) maxPriceFilter.value = '';
-    
+    document.getElementById('availablePickupCityFilter').value = '';
+    document.getElementById('availableDeliveryCityFilter').value = '';
+    document.getElementById('availableCargoTypeFilter').value = '';
+    document.getElementById('availableVehicleTypeFilter').value = '';
+    document.getElementById('availableMinPriceFilter').value = '';
+    document.getElementById('availableMaxPriceFilter').value = '';
+    document.getElementById('availableMinWeightFilter').value = '';
+    document.getElementById('availableMaxWeightFilter').value = '';
+    document.getElementById('availableDateFromFilter').value = '';
+    document.getElementById('availableDateToFilter').value = '';
+    document.getElementById('availableSearchFilter').value = '';
+    document.getElementById('availableSortFilter').value = 'date_desc';
     filterAvailableCargos();
 }
 
 // Загрузка доступных грузов (для водителей)
 async function loadAvailableCargos() {
     try {
-        const data = await apiRequest('/cargo/available');
+        const query = buildFilterQuery();
+        const url = query ? `/cargo/available?${query}` : '/cargo/available';
+        const data = await apiRequest(url);
         allAvailableCargos = data.cargos;
-        filterAvailableCargos();
+        renderAvailableCargos(allAvailableCargos);
     } catch (error) {
         document.getElementById('availableCargosContent').innerHTML = 
             `<div class="alert alert-error">${error.message}</div>`;
@@ -1481,6 +1505,20 @@ async function acceptOrder(cargoId) {
     }
 }
 
+// Загрузка моих заказов
+async function loadMyOrders() {
+    try {
+        const data = await apiRequest('/driver/orders');
+        allMyOrders = data.orders || [];
+        filterMyOrders();
+    } catch (error) {
+        const content = document.getElementById('myOrdersContent');
+        if (content) {
+            content.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        }
+    }
+}
+
 // Фильтрация моих заказов
 function filterMyOrders() {
     const statusFilter = document.getElementById('myOrdersStatusFilter').value.toLowerCase();
@@ -1640,11 +1678,19 @@ function renderMyOrders(orders) {
                                     ${cargo.shipper.email}
                                 </a>
                             </div>
-                            ${cargo.shipper.profile?.phone ? `
+                            ${cargo.shipper.phone ? `
                             <div class="contact-item">
                                 <strong><i class="fas fa-phone"></i> Телефон:</strong>
-                                <a href="tel:${cargo.shipper.profile.phone}" style="color: white; text-decoration: underline;">
-                                    ${cargo.shipper.profile.phone}
+                                <a href="tel:${cargo.shipper.phone}" style="color: white; text-decoration: underline;">
+                                    ${cargo.shipper.phone}
+                                </a>
+                            </div>
+                            ` : ''}
+                            ${cargo.shipper.phone2 ? `
+                            <div class="contact-item">
+                                <strong><i class="fas fa-phone"></i> Телефон 2:</strong>
+                                <a href="tel:${cargo.shipper.phone2}" style="color: white; text-decoration: underline;">
+                                    ${cargo.shipper.phone2}
                                 </a>
                             </div>
                             ` : ''}
@@ -1661,6 +1707,12 @@ function renderMyOrders(orders) {
                             </div>
                             ` : ''}
                         </div>
+                        ${cargo.status === 'delivered' ? `
+                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" 
+                                onclick="showReviewForm(${cargo.id}, ${cargo.shipper.id})">
+                            <i class="fas fa-star"></i> Оставить отзыв
+                        </button>
+                        ` : ''}
                     </div>
                     ` : ''}
                 </div>
@@ -2218,6 +2270,447 @@ function validateResetPasswordInput() {
     }
 }
 
+// ==================== REVIEW FUNCTIONS ====================
+
+let currentReviewRating = 0;
+
+function setRating(rating) {
+    currentReviewRating = rating;
+    const stars = document.querySelectorAll('#ratingInput .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.textContent = '★';
+            star.classList.add('active');
+        } else {
+            star.textContent = '☆';
+            star.classList.remove('active');
+        }
+    });
+    document.getElementById('reviewRating').value = rating;
+}
+
+function showReviewForm(cargoId, toUserId) {
+    document.getElementById('reviewCargoId').value = cargoId;
+    document.getElementById('reviewToUserId').value = toUserId;
+    document.getElementById('reviewComment').value = '';
+    currentReviewRating = 0;
+    setRating(0);
+    const modal = document.getElementById('reviewModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+}
+
+function closeReviewModal() {
+    const modal = document.getElementById('reviewModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+    currentReviewRating = 0;
+    setRating(0);
+}
+
+async function submitReview(e) {
+    e.preventDefault();
+    const cargoId = document.getElementById('reviewCargoId').value;
+    const toUserId = document.getElementById('reviewToUserId').value;
+    const rating = document.getElementById('reviewRating').value;
+    const comment = document.getElementById('reviewComment').value;
+
+    if (!rating || rating < 1 || rating > 5) {
+        alert('Пожалуйста, выберите оценку от 1 до 5 звезд');
+        return;
+    }
+
+    try {
+        await apiRequest('/reviews', {
+            method: 'POST',
+            body: JSON.stringify({
+                cargoId: parseInt(cargoId),
+                toUserId: parseInt(toUserId),
+                rating: parseFloat(rating),
+                comment: comment || null
+            })
+        });
+
+        alert('Отзыв успешно отправлен!');
+        closeReviewModal();
+        
+        // Обновляем страницу если нужно
+        if (document.getElementById('cargoList').classList.contains('active')) {
+            loadCargoList();
+        } else if (document.getElementById('myOrders').classList.contains('active')) {
+            loadMyOrders();
+        }
+    } catch (error) {
+        alert('Ошибка отправки отзыва: ' + error.message);
+    }
+}
+
+function renderRating(rating) {
+    if (!rating || rating === 0) return '<span style="color: var(--gray-400);">Нет рейтинга</span>';
+    
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    let html = '<div class="rating-display">';
+    
+    for (let i = 0; i < 5; i++) {
+        if (i < fullStars) {
+            html += '<span class="star">★</span>';
+        } else if (i === fullStars && hasHalfStar) {
+            html += '<span class="star">☆</span>';
+        } else {
+            html += '<span class="star empty">☆</span>';
+        }
+    }
+    
+    html += ` <span style="margin-left: 8px; font-weight: 600;">${parseFloat(rating).toFixed(1)}</span>`;
+    html += '</div>';
+    return html;
+}
+
+async function loadReviews(cargoId) {
+    try {
+        const data = await apiRequest(`/reviews/cargo/${cargoId}`);
+        return data.reviews || [];
+    } catch (error) {
+        console.error('Ошибка загрузки отзывов:', error);
+        return [];
+    }
+}
+
+function renderReviews(reviews) {
+    if (!reviews || reviews.length === 0) {
+        return '<p style="color: var(--gray-500);">Отзывов пока нет</p>';
+    }
+
+    return reviews.map(review => `
+        <div style="padding: 16px; border-bottom: 1px solid var(--gray-200);">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <div>
+                    <strong>${review.fromUser?.email || 'Пользователь'}</strong>
+                    <div style="margin-top: 4px;">${renderRating(review.rating)}</div>
+                </div>
+                <span style="color: var(--gray-500); font-size: 12px;">
+                    ${new Date(review.createdAt).toLocaleDateString('ru-RU')}
+                </span>
+            </div>
+            ${review.comment ? `<p style="margin-top: 8px; color: var(--gray-700);">${review.comment}</p>` : ''}
+        </div>
+    `).join('');
+}
+
+// ==================== FILTER FUNCTIONS ====================
+
+function buildFilterQuery() {
+    const params = new URLSearchParams();
+    
+    // Определяем, какая страница активна
+    const isCargoList = document.getElementById('cargoList')?.classList.contains('active');
+    const isAvailableCargos = document.getElementById('availableCargos')?.classList.contains('active');
+    
+    if (isCargoList) {
+        const search = document.getElementById('cargoSearchFilter')?.value;
+        if (search) params.append('search', search);
+        
+        const cityFrom = document.getElementById('cargoPickupCityFilter')?.value;
+        if (cityFrom) params.append('cityFrom', cityFrom);
+        
+        const cityTo = document.getElementById('cargoDeliveryCityFilter')?.value;
+        if (cityTo) params.append('cityTo', cityTo);
+        
+        const cargoType = document.getElementById('cargoTypeFilter')?.value;
+        if (cargoType) params.append('cargoType', cargoType);
+        
+        const minPrice = document.getElementById('cargoMinPriceFilter')?.value;
+        if (minPrice) params.append('minPrice', minPrice);
+        
+        const maxPrice = document.getElementById('cargoMaxPriceFilter')?.value;
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        
+        const minWeight = document.getElementById('cargoMinWeightFilter')?.value;
+        if (minWeight) params.append('minWeight', minWeight);
+        
+        const maxWeight = document.getElementById('cargoMaxWeightFilter')?.value;
+        if (maxWeight) params.append('maxWeight', maxWeight);
+        
+        const dateFrom = document.getElementById('cargoDateFromFilter')?.value;
+        if (dateFrom) params.append('dateFrom', dateFrom);
+        
+        const dateTo = document.getElementById('cargoDateToFilter')?.value;
+        if (dateTo) params.append('dateTo', dateTo);
+        
+        const sort = document.getElementById('cargoSortFilter')?.value;
+        if (sort) params.append('sort', sort);
+        
+        const status = document.getElementById('cargoStatusFilter')?.value;
+        if (status) params.append('status', status);
+    } else if (isAvailableCargos) {
+        const search = document.getElementById('availableSearchFilter')?.value;
+        if (search) params.append('search', search);
+        
+        const cityFrom = document.getElementById('availablePickupCityFilter')?.value;
+        if (cityFrom) params.append('cityFrom', cityFrom);
+        
+        const cityTo = document.getElementById('availableDeliveryCityFilter')?.value;
+        if (cityTo) params.append('cityTo', cityTo);
+        
+        const cargoType = document.getElementById('availableCargoTypeFilter')?.value;
+        if (cargoType) params.append('cargoType', cargoType);
+        
+        const minPrice = document.getElementById('availableMinPriceFilter')?.value;
+        if (minPrice) params.append('minPrice', minPrice);
+        
+        const maxPrice = document.getElementById('availableMaxPriceFilter')?.value;
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        
+        const minWeight = document.getElementById('availableMinWeightFilter')?.value;
+        if (minWeight) params.append('minWeight', minWeight);
+        
+        const maxWeight = document.getElementById('availableMaxWeightFilter')?.value;
+        if (maxWeight) params.append('maxWeight', maxWeight);
+        
+        const dateFrom = document.getElementById('availableDateFromFilter')?.value;
+        if (dateFrom) params.append('dateFrom', dateFrom);
+        
+        const dateTo = document.getElementById('availableDateToFilter')?.value;
+        if (dateTo) params.append('dateTo', dateTo);
+        
+        const sort = document.getElementById('availableSortFilter')?.value;
+        if (sort) params.append('sort', sort);
+    }
+    
+    return params.toString();
+}
+
+// ==================== HISTORY FUNCTIONS ====================
+
+async function loadHistoryCargos() {
+    try {
+        const data = await apiRequest('/history/cargos');
+        renderHistoryCargos(data.cargos || [], data.stats || {});
+    } catch (error) {
+        const content = document.getElementById('historyCargosContent');
+        if (content) {
+            content.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        }
+    }
+}
+
+async function loadHistoryOrders() {
+    try {
+        const data = await apiRequest('/history/orders');
+        renderHistoryOrders(data.orders || [], data.stats || {});
+    } catch (error) {
+        const content = document.getElementById('historyOrdersContent');
+        if (content) {
+            content.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+        }
+    }
+}
+
+function renderHistoryCargos(cargos, stats) {
+    const content = document.getElementById('historyCargosContent');
+    const statsDiv = document.getElementById('historyCargosStats');
+    
+    if (!content) return;
+    
+    // Отображаем статистику
+    if (statsDiv) {
+        statsDiv.innerHTML = `
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${stats.total || 0}</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Всего грузов</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${stats.delivered || 0}</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Доставлено</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${parseFloat(stats.totalValue || 0).toLocaleString('ru-RU')} ₸</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Общая стоимость</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Фильтруем по статусу если выбран
+    const statusFilter = document.getElementById('historyCargosStatusFilter')?.value;
+    let filteredCargos = cargos;
+    if (statusFilter) {
+        filteredCargos = cargos.filter(c => c.status === statusFilter);
+    }
+    
+    if (filteredCargos.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-box" style="font-size: 64px;"></i></div>
+                <h3>История пуста</h3>
+            </div>
+        `;
+        return;
+    }
+    
+    const statusLabels = {
+        pending: { text: 'Ожидает', class: 'badge-warning' },
+        assigned: { text: 'Назначен', class: 'badge-info' },
+        in_transit: { text: 'В пути', class: 'badge-info' },
+        delivered: { text: 'Доставлен', class: 'badge-success' },
+        cancelled: { text: 'Отменен', class: 'badge-danger' }
+    };
+    
+    content.innerHTML = filteredCargos.map(cargo => {
+        const status = statusLabels[cargo.status] || { text: cargo.status, class: 'badge-info' };
+        const hasReview = cargo.reviews && cargo.reviews.length > 0;
+        
+        return `
+            <div class="card cargo-card">
+                <div class="cargo-header">
+                    <div>
+                        <h3 style="margin-bottom: 8px;">${cargo.title}</h3>
+                        <span class="badge ${status.class}">${status.text}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <strong>Стоимость:</strong> ${parseFloat(cargo.totalPrice).toLocaleString('ru-RU')} ₸
+                </div>
+                ${cargo.assignedDriver ? `
+                    <div style="margin-top: 12px;">
+                        <strong>Водитель:</strong> ${cargo.assignedDriver.email}
+                        ${cargo.driverInfo ? ` ${renderRating(cargo.driverInfo.rating)}` : ''}
+                    </div>
+                ` : ''}
+                ${cargo.status === 'delivered' && cargo.assignedDriver && !hasReview ? `
+                    <button class="btn btn-primary" style="margin-top: 16px;" 
+                            onclick="showReviewForm(${cargo.id}, ${cargo.assignedDriver.id})">
+                        <i class="fas fa-star"></i> Оставить отзыв
+                    </button>
+                ` : ''}
+                ${hasReview ? `
+                    <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: var(--radius);">
+                        <strong>Отзывы:</strong>
+                        ${renderReviews(cargo.reviews)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function renderHistoryOrders(orders, stats) {
+    const content = document.getElementById('historyOrdersContent');
+    const statsDiv = document.getElementById('historyOrdersStats');
+    
+    if (!content) return;
+    
+    // Отображаем статистику
+    if (statsDiv) {
+        statsDiv.innerHTML = `
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${stats.total || 0}</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Всего заказов</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${stats.delivered || 0}</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Доставлено</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${parseFloat(stats.totalEarnings || 0).toLocaleString('ru-RU')} ₸</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Заработано</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700;">${renderRating(stats.averageRating || 0)}</div>
+                        <div style="font-size: 14px; opacity: 0.9;">Средний рейтинг</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Фильтруем по статусу если выбран
+    const statusFilter = document.getElementById('historyOrdersStatusFilter')?.value;
+    let filteredOrders = orders;
+    if (statusFilter) {
+        filteredOrders = orders.filter(o => o.status === statusFilter);
+    }
+    
+    if (filteredOrders.length === 0) {
+        content.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-clipboard-list" style="font-size: 64px;"></i></div>
+                <h3>История пуста</h3>
+            </div>
+        `;
+        return;
+    }
+    
+    const statusLabels = {
+        assigned: { text: 'Назначен', class: 'badge-info' },
+        in_transit: { text: 'В пути', class: 'badge-info' },
+        delivered: { text: 'Доставлен', class: 'badge-success' },
+        cancelled: { text: 'Отменен', class: 'badge-danger' }
+    };
+    
+    content.innerHTML = filteredOrders.map(order => {
+        const status = statusLabels[order.status] || { text: order.status, class: 'badge-info' };
+        const hasReview = order.reviews && order.reviews.length > 0;
+        
+        return `
+            <div class="card cargo-card">
+                <div class="cargo-header">
+                    <div>
+                        <h3 style="margin-bottom: 8px;">${order.title}</h3>
+                        <span class="badge ${status.class}">${status.text}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <strong>Стоимость:</strong> ${parseFloat(order.totalPrice).toLocaleString('ru-RU')} ₸
+                </div>
+                ${order.shipper ? `
+                    <div style="margin-top: 12px;">
+                        <strong>Грузоотправитель:</strong> ${order.shipper.email}
+                    </div>
+                ` : ''}
+                ${order.status === 'delivered' && order.shipper && !hasReview ? `
+                    <button class="btn btn-primary" style="margin-top: 16px;" 
+                            onclick="showReviewForm(${order.id}, ${order.shipper.id})">
+                        <i class="fas fa-star"></i> Оставить отзыв
+                    </button>
+                ` : ''}
+                ${hasReview ? `
+                    <div style="margin-top: 16px; padding: 16px; background: var(--gray-50); border-radius: var(--radius);">
+                        <strong>Отзывы:</strong>
+                        ${renderReviews(order.reviews)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function filterHistoryCargos() {
+    loadHistoryCargos();
+}
+
+function clearHistoryCargosFilters() {
+    const filter = document.getElementById('historyCargosStatusFilter');
+    if (filter) filter.value = '';
+    filterHistoryCargos();
+}
+
+function filterHistoryOrders() {
+    loadHistoryOrders();
+}
+
+function clearHistoryOrdersFilters() {
+    const filter = document.getElementById('historyOrdersStatusFilter');
+    if (filter) filter.value = '';
+    filterHistoryOrders();
+}
+
 // Экспортируем все функции в window для использования в onclick
 window.handleLogin = handleLogin;
 window.handleRegister = handleRegister;
@@ -2247,5 +2740,16 @@ window.clearAvailableFilters = clearAvailableFilters;
 window.filterMyOrders = filterMyOrders;
 window.clearMyOrdersFilters = clearMyOrdersFilters;
 window.calculatePricePerKm = calculatePricePerKm;
+window.setRating = setRating;
+window.showReviewForm = showReviewForm;
+window.closeReviewModal = closeReviewModal;
+window.submitReview = submitReview;
+window.loadHistoryCargos = loadHistoryCargos;
+window.loadHistoryOrders = loadHistoryOrders;
+window.filterHistoryCargos = filterHistoryCargos;
+window.clearHistoryCargosFilters = clearHistoryCargosFilters;
+window.filterHistoryOrders = filterHistoryOrders;
+window.clearHistoryOrdersFilters = clearHistoryOrdersFilters;
+window.loadMyOrders = loadMyOrders;
 window.updateWeightTons = updateWeightTons;
 window.updateWeightKg = updateWeightKg;

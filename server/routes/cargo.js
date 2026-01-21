@@ -3,8 +3,10 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const Cargo = require('../models/Cargo');
 const User = require('../models/User');
+const Driver = require('../models/Driver');
 const { auth, isPaid } = require('../middleware/auth');
 const { sanitizeString, sanitizeObject } = require('../utils/sanitize');
+const { Op } = require('sequelize');
 
 // Создание груза
 router.post('/', [auth, isPaid], [
@@ -70,16 +72,112 @@ router.post('/', [auth, isPaid], [
 // Получение всех грузов пользователя
 router.get('/my', auth, isPaid, async (req, res) => {
   try {
-    const cargos = await Cargo.findAll({
-      where: { shipperId: req.user.id },
-      include: [
-        { model: User, as: 'assignedDriver', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
+    const where = { shipperId: req.user.id };
+    const order = [['createdAt', 'DESC']];
+
+    // Фильтры
+    if (req.query.cargoType) {
+      where.cargoType = req.query.cargoType;
+    }
+    if (req.query.status) {
+      where.status = req.query.status;
+    }
     
-    res.json({ cargos });
+    // Фильтр по цене
+    if (req.query.minPrice || req.query.maxPrice) {
+      where.totalPrice = {};
+      if (req.query.minPrice) {
+        where.totalPrice[Op.gte] = parseFloat(req.query.minPrice);
+      }
+      if (req.query.maxPrice) {
+        where.totalPrice[Op.lte] = parseFloat(req.query.maxPrice);
+      }
+    }
+    
+    // Фильтр по весу
+    if (req.query.minWeight || req.query.maxWeight) {
+      where.weightKg = {};
+      if (req.query.minWeight) {
+        where.weightKg[Op.gte] = parseFloat(req.query.minWeight);
+      }
+      if (req.query.maxWeight) {
+        where.weightKg[Op.lte] = parseFloat(req.query.maxWeight);
+      }
+    }
+    
+    // Фильтр по дате
+    if (req.query.dateFrom || req.query.dateTo) {
+      where.pickupDate = {};
+      if (req.query.dateFrom) {
+        where.pickupDate[Op.gte] = new Date(req.query.dateFrom);
+      }
+      if (req.query.dateTo) {
+        where.pickupDate[Op.lte] = new Date(req.query.dateTo);
+      }
+    }
+
+    // Поиск по тексту
+    if (req.query.search) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${req.query.search}%` } },
+        { description: { [Op.like]: `%${req.query.search}%` } }
+      ];
+    }
+
+    // Сортировка
+    if (req.query.sort) {
+      const [field, direction] = req.query.sort.split('_');
+      const orderDirection = direction === 'desc' ? 'DESC' : 'ASC';
+      if (['price', 'date', 'distance', 'weight'].includes(field)) {
+        const orderField = field === 'price' ? 'totalPrice' : 
+                          field === 'date' ? 'pickupDate' : 
+                          field === 'distance' ? 'distance' : 'weightKg';
+        order[0] = [orderField, orderDirection];
+      }
+    }
+
+    let cargos = await Cargo.findAll({
+      where,
+      include: [
+        { 
+          model: User, 
+          as: 'assignedDriver', 
+          attributes: ['id', 'email', 'phone', 'phone2', 'profile']
+        }
+      ],
+      order
+    });
+
+    // Фильтрация по городу (после загрузки, так как это JSON поле)
+    if (req.query.cityFrom) {
+      cargos = cargos.filter(cargo => {
+        const pickupCity = cargo.pickupLocation?.city || '';
+        return pickupCity.toLowerCase().includes(req.query.cityFrom.toLowerCase());
+      });
+    }
+    if (req.query.cityTo) {
+      cargos = cargos.filter(cargo => {
+        const deliveryCity = cargo.deliveryLocation?.city || '';
+        return deliveryCity.toLowerCase().includes(req.query.cityTo.toLowerCase());
+      });
+    }
+
+    // Добавляем информацию о рейтинге водителя
+    const cargosWithRating = await Promise.all(cargos.map(async (cargo) => {
+      const cargoData = cargo.toJSON();
+      if (cargo.assignedDriverId) {
+        const driver = await Driver.findOne({ where: { userId: cargo.assignedDriverId } });
+        if (driver) {
+          cargoData.driverRating = driver.rating;
+          cargoData.driverCompletedOrders = driver.completedOrders;
+        }
+      }
+      return cargoData;
+    }));
+    
+    res.json({ cargos: cargosWithRating });
   } catch (error) {
+    console.error('Ошибка получения грузов:', error);
     res.status(500).json({ message: 'Ошибка получения грузов' });
   }
 });
@@ -87,16 +185,97 @@ router.get('/my', auth, isPaid, async (req, res) => {
 // Получение всех доступных грузов (для водителей)
 router.get('/available', auth, isPaid, async (req, res) => {
   try {
-    const cargos = await Cargo.findAll({
-      where: { status: 'pending' },
+    const where = { status: 'pending' };
+    const order = [['createdAt', 'DESC']];
+
+    // Фильтры
+    if (req.query.cargoType) {
+      where.cargoType = req.query.cargoType;
+    }
+    
+    // Фильтр по цене
+    if (req.query.minPrice || req.query.maxPrice) {
+      where.totalPrice = {};
+      if (req.query.minPrice) {
+        where.totalPrice[Op.gte] = parseFloat(req.query.minPrice);
+      }
+      if (req.query.maxPrice) {
+        where.totalPrice[Op.lte] = parseFloat(req.query.maxPrice);
+      }
+    }
+    
+    // Фильтр по весу
+    if (req.query.minWeight || req.query.maxWeight) {
+      where.weightKg = {};
+      if (req.query.minWeight) {
+        where.weightKg[Op.gte] = parseFloat(req.query.minWeight);
+      }
+      if (req.query.maxWeight) {
+        where.weightKg[Op.lte] = parseFloat(req.query.maxWeight);
+      }
+    }
+    
+    // Фильтр по дате
+    if (req.query.dateFrom || req.query.dateTo) {
+      where.pickupDate = {};
+      if (req.query.dateFrom) {
+        where.pickupDate[Op.gte] = new Date(req.query.dateFrom);
+      }
+      if (req.query.dateTo) {
+        where.pickupDate[Op.lte] = new Date(req.query.dateTo);
+      }
+    }
+
+    // Поиск по тексту - применяем после загрузки
+    let searchTerm = req.query.search;
+
+    // Сортировка
+    if (req.query.sort) {
+      const [field, direction] = req.query.sort.split('_');
+      const orderDirection = direction === 'desc' ? 'DESC' : 'ASC';
+      if (['price', 'date', 'distance', 'weight'].includes(field)) {
+        const orderField = field === 'price' ? 'totalPrice' : 
+                          field === 'date' ? 'pickupDate' : 
+                          field === 'distance' ? 'distance' : 'weightKg';
+        order[0] = [orderField, orderDirection];
+      }
+    }
+
+    let cargos = await Cargo.findAll({
+      where,
       include: [
         { model: User, as: 'shipper', attributes: ['id', 'email', 'phone', 'phone2', 'profile'] }
       ],
-      order: [['createdAt', 'DESC']]
+      order
     });
+
+    // Фильтрация по городу и поиск по тексту (после загрузки, так как это JSON поле)
+    if (req.query.cityFrom) {
+      cargos = cargos.filter(cargo => {
+        const pickupCity = cargo.pickupLocation?.city || '';
+        return pickupCity.toLowerCase().includes(req.query.cityFrom.toLowerCase());
+      });
+    }
+    if (req.query.cityTo) {
+      cargos = cargos.filter(cargo => {
+        const deliveryCity = cargo.deliveryLocation?.city || '';
+        return deliveryCity.toLowerCase().includes(req.query.cityTo.toLowerCase());
+      });
+    }
+    
+    // Поиск по тексту
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      cargos = cargos.filter(cargo => {
+        const title = (cargo.title || '').toLowerCase();
+        const description = (cargo.description || '').toLowerCase();
+        return title.includes(searchLower) || description.includes(searchLower);
+      });
+    }
     
     res.json({ cargos });
   } catch (error) {
+    console.error('Ошибка получения грузов:', error);
     res.status(500).json({ message: 'Ошибка получения грузов' });
   }
 });

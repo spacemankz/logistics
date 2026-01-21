@@ -86,8 +86,41 @@ const Driver = sequelize.define('Driver', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'drivers'
+  tableName: 'drivers',
+  hooks: {
+    afterUpdate: async (driver) => {
+      // Хук для автоматического пересчета рейтинга будет вызываться из routes/reviews.js
+    }
+  }
 });
+
+// Метод для пересчета рейтинга водителя
+Driver.recalculateRating = async function(userId) {
+  const Review = require('./Review');
+  const { Op } = require('sequelize');
+  
+  const driver = await Driver.findOne({ where: { userId } });
+  if (!driver) return;
+  
+  // Получаем все отзывы для этого водителя
+  const reviews = await Review.findAll({
+    where: { toUserId: userId }
+  });
+  
+  if (reviews.length === 0) {
+    await driver.update({ rating: 0 });
+    return;
+  }
+  
+  // Вычисляем средний рейтинг
+  const totalRating = reviews.reduce((sum, review) => sum + parseFloat(review.rating), 0);
+  const averageRating = (totalRating / reviews.length).toFixed(2);
+  
+  await driver.update({ 
+    rating: parseFloat(averageRating),
+    completedOrders: reviews.length
+  });
+};
 
 module.exports = Driver;
 
